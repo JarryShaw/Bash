@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ################################################################################
 # Clean up caches.
@@ -11,10 +11,11 @@ cleanup () {
     clear
     printf "\n-*- Cleanup -*-\n"
 
+    cp -rf $(brew --cache) /PATH/TO/STORAGE
     
     if [ "$flag_brew" = true ]; then
         printf "\nbrew cleanup\n"
-        brew cleanup
+        rm -rf $(brew --cache)
     fi
 
     if [ "$flag_cask" = true ]; then
@@ -46,13 +47,13 @@ do
 done
 
 if [ $mode == "all" ]; then
-    bash ./src.upgrade/upgrade_software.sh $name
-    bash ./src.upgrade/upgrade_pip.sh $name
-    bash ./src.upgrade/upgrade_pip3.sh $name
-    bash ./src.upgrade/upgrade_pip_pypy.sh $name
-    bash ./src.upgrade/upgrade_pip_pypy3.sh $name
-    bash ./src.upgrade/upgrade_brew.sh $name
-    bash ./src.upgrade/upgrade_cask.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_software.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip3.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip_pypy.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip_pypy3.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_brew.sh $name
+    bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_cask.sh $name
 
     brew_flag=true
     cask_flag=true
@@ -64,26 +65,26 @@ else
         cask_flag=false
 
         if [ $flag == "software" ]; then
-            bash ./src.upgrade/upgrade_software.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_software.sh $name
         fi
         if [ $flag == "pip" ]; then
-            bash ./src.upgrade/upgrade_pip.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip.sh $name
         fi
         if [ $flag == "pip3" ]; then
-            bash ./src.upgrade/upgrade_pip3.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip3.sh $name
         fi
         if [ $flag == "pip_pypy" ]; then
-            bash ./src.upgrade/upgrade_pip_pypy.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip_pypy.sh $name
         fi
         if [ $flag == "pip_pypy3" ]; then
-            bash ./src.upgrade/upgrade_pip_pypy3.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_pip_pypy3.sh $name
         fi
         if [ $flag == "brew" ]; then
-            bash ./src.upgrade/upgrade_brew.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_brew.sh $name
             brew_flag=true
         fi
         if [ $flag == "cask" ]; then
-            bash ./src.upgrade/upgrade_cask.sh $name
+            bash /PATH/TO/SCRIPTS/src.upgrade/upgrade_cask.sh $name
             cask_flag=true
         fi
 

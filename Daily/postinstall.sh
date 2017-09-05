@@ -30,7 +30,7 @@ do
     esac
 done
 
-if [ $name == "all" ]
+if [ $name == "all" ]; then
     LST=$( brew list )
     for pkg in $LST;
     do
