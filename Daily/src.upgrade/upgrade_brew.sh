@@ -4,19 +4,19 @@
 # Check Homebrew updates.
 ################################################################################
 
-name=$1
-
 clear
 printf "\n-*- Homebrew -*-\n"
 
-if [ $name == "all" ]; then
-    LST=$(brew list)
-    for pkg in $LST;
-    do
-        printf "\nbrew upgrade $pkg\n"
-        brew upgrade $pkg
-    done
-else
-    printf "\nbrew upgrade $name\n"
-    brew upgrade $name
-fi
+case $1 in
+    "all")
+        list=$(brew list)
+        for pkg in $list ; do
+            printf "\nbrew upgrade $pkg\n"
+            brew upgrade $pkg
+        done ;;
+    "none")
+        echo "No updates are done." ;;
+    *)
+        printf "\nbrew upgrade $1\n"
+        brew upgrade $1 ;;
+esac

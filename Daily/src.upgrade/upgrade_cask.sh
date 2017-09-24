@@ -4,41 +4,39 @@
 # Check Caskroom updates.
 ################################################################################
 
-name=$1
-
 clear
 printf "\n-*- Caskroom -*-\n"
 
-if [ $name == "all" ]; then
-    # LST=$(brew cask list)
-    # for pkg in $LST;
-    # do
-    #     printf "\nbrew cask upgrade $pkg\n"
-    #     brew cask upgrade $pkg
-    # done
+function caskupgrade {
+    cask=$1
+    version=$(brew cask info $cask | sed -n "s/$cask:\ \(.*\)/\1/p")
+    installed=$(find "/usr/local/Caskroom/$cask" -type d -maxdepth 1 -maxdepth 1 -name "$version")
 
-    # The following part of Caskroom upgrade credits to @Atais from <apple.stackexchange.com>
+    if [[ -z $installed ]] ; then
+        echo "${red}${cask}${reset} requires ${red}update${reset}."
+        (set -x; brew cask uninstall $cask --force;)
+        (set -x; brew cask install $cask --force;)
+    else
+        echo "${red}${cask}${reset} is ${green}up-to-date${reset}."
+    fi
+}
 
-    red=`tput setaf 1`
-    green=`tput setaf 2`
-    reset=`tput sgr0`
+case $1 in
+    "all")
+        # The following part of Caskroom upgrade credits to
+        #     @Atais from <apple.stackexchange.com>
 
-    casks=( $(brew cask list) )
+        red=`tput setaf 1`
+        green=`tput setaf 2`
+        reset=`tput sgr0`
 
-    for cask in ${casks[@]}
-    do
-        version=$(brew cask info $cask | sed -n "s/$cask:\ \(.*\)/\1/p")
-        installed=$(find "/usr/local/Caskroom/$cask" -type d -maxdepth 1 -maxdepth 1 -name "$version")
+        casks=( $(brew cask list) )
 
-        if [[ -z $installed ]]; then
-            echo "${red}${cask}${reset} requires ${red}update${reset}."
-            (set -x; brew cask uninstall $cask --force;)
-            (set -x; brew cask install $cask --force;)
-        else
-            echo "${red}${cask}${reset} is ${green}up-to-date${reset}."
-        fi
-    done
-else
-    printf "\nbrew cask upgrade $name\n"
-    brew cask install $name --force
-fi
+        for cask in ${casks[@]} ; do
+            caskupgrade $cask
+        done ;;
+    "none")
+        echo "No updates are done." ;;
+    *)
+        caskupgrade $cask ;;
+esac

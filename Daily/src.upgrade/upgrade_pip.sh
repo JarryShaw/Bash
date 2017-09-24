@@ -1,30 +1,76 @@
 #!/bin/bash
 
 ################################################################################
-# Check CPython 2.7 site packages updates.
+# Check Python site packages updates.
 ################################################################################
 
-name=$1
-
 clear
-printf "\n-*- CPython 2.7 -*-\n"
+printf "\n-*- Python -*-\n"
 
-if [ $name == "all" ]; then
-    LST=$(pip list --format=legacy)
-    CTR=1
+# pipupgrade 2/3 cpython/pypy system/cellar
+function pipupgrade {
+    echo $1 $2 $3
+    if ( $1 ); then
+        verl="2.7"
+        vers=""
+    else
+        verl="3.6"
+        vers="3"
+    fi
 
-    for pkg in $LST;
-    do
-        if [[ $[$CTR%2] == 1 ]];
-        then
-            printf "\npip install --upgrade $pkg\n"
-            pip --no-cache-dir install --upgrade $pkg
+    if ( $2 ) ; then
+        echo $1 $2 $3 $vers $verl
+        if ( $3 ) ; then
+            pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
+            suff="_sys$vers"
+        else
+            pref="/usr/local/opt/python$vers/bin"
+            suff="$vers"
         fi
-        ((CTR++))
-    done
+    else
+        pref="/usr/local/opt/pypy$vers/bin"
+        suff="_pypy$vers"
+    fi
+    echo $suff
 
-    pip --no-cache-dir -q install --upgrade flake8
-else
-    printf "\npip install --upgrade $name\n"
-    pip --no-cache-dir install --upgrade $name
+    case $4 in 
+        "all")
+            list=`pipdeptree$suff | grep -e "=="`
+            for name in $list ; do
+                pkg=${name%==*}
+                printf "\npip$suff install --upgrade $pkg\n"
+                $pref/pip$vers -q install --upgrade --no-cache-dir $pkg
+            done ;;
+        *)
+            printf "\npip$suff install --upgrade $4\n"
+            $pref/pip$vers install --upgrade --no-cache-dir $4 ;;
+    esac
+}
+
+if ( $1 ) ; then
+    echo hi $5
+    case "$5" in
+        1) pipupgrade true true true $6 ; pipupgrade false true true $6 ;;
+        2) pipupgrade true true $6 ;;
+        3) pipupgrade false true true $6 ;;
+    esac
+fi
+
+if ( $2 ) ; then
+    echo hey $3 $4
+    if ( $3 ) ; then
+        case "$5" in
+            1) pipupgrade true true false $6 ; pipupgrade false true false $6 ;;
+            2) pipupgrade true true false $6 ;;
+            3) pipupgrade false true false $6 ;;
+        esac
+    fi
+
+    if ( $4 ) ; then
+        case "$5" in
+            1) pipupgrade true false false $6 ; pipupgrade false false false $6 ;;
+            2) pipupgrade true false false $6 ;;
+            3) pipupgrade false false false $6 ;;
+        esac
+    fi
 fi
