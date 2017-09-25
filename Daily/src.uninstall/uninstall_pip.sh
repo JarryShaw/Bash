@@ -1,40 +1,86 @@
 #!/bin/bash
 
 ################################################################################
-# Uninstall CPython 2.7 site packages.
+# Uninstall Python site packages.
 ################################################################################
 
+if ( $1 ) ; then
+    tmp="all"
+fi
 
-name=$1
-printf "\n-*- Uninstalling $name & Dependencies -*-\n"
+printf "\n-*- Uninstalling $tmp & Dependencies -*-\n"
 
-if [ $name == "all" ]
-    LST=$(pip list --format=legacy)
-    CTR=1
+# pipuninstall 2/3 cpython/pypy system/cellar
+function pipuninstall {
+    if ( $1 ); then
+        verl="2.7"
+        vers=""
+    else
+        verl="3.6"
+        vers="3"
+    fi
 
-    for pkg in $LST;
-    do
-        if [[ $[$CTR%2] == 1 ]];
-        then
-            printf "\npip uninstall $pkg\n"
-            pip uninstall $pkg
+    if ( $2 ) ; then
+        if ( $3 ) ; then
+            pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
+            prtf="_sys$vers"
+        else
+            pref="/usr/local/opt/python$vers/bin"
+            prtf="$vers"
         fi
-        ((CTR++))
-    done
-elif [ $name == "none" ]; then
-    printf ""
-else
-    LST=$( pipdeptree -p $name )
-    FLG=0
-    for pkg in $LST;
-    do
-        if [ $FLG == 1 ]; then
-            printf "\npip uninstall $pkg\n"
-            pip uninstall $pkg
-            FLG=0
-        fi
-        if [ $pkg == "-" ]; then
-            FLG=1
-        fi
-    done
+        suff="$vers"
+    else
+        pref="/usr/local/opt/pypy$vers/bin"
+        suff="_pypy$vers"
+        prtf="_pypy$vers"
+    fi
+
+    case $4 in 
+        "all")
+            list=`$pref/pip$suff freeze | grep -e "=="` ;;
+        "none")
+            echo "No uninstallation is done." ; exit 0 ;;
+        *)
+            list=`pipdeptree$prtf -f -p $4 | grep -e "=="` ;;
+    esac
+
+    for name in $list ; do
+        pkg=${name%==*}
+        case "$pkg" in
+            "pip"|"setuptools"|"wheel"|"pipdeptree")
+                : ;;
+            *)  
+                printf "\npip$prtf uninstall $pkg\n"
+                $pref/pip$suff uninstall -q $pkg ;;
+        esac
+    done 
+}
+
+if ( $1 ) ; then
+    case "$5" in
+        1)  pipuninstall true true true $6
+            pipuninstall false true true $6 ;;
+        2)  pipuninstall true true true $6 ;;
+        3)  pipuninstall false true true $6 ;;
+    esac
+fi
+
+if ( $2 ) ; then
+    if ( $3 ) ; then
+        case "$5" in
+            1)  pipuninstall true true false $6
+                pipuninstall false true false $6 ;;
+            2)  pipuninstall true true false $6 ;;
+            3)  pipuninstall false true false $6 ;;
+        esac
+    fi
+
+    if ( $4 ) ; then
+        case "$5" in
+            1)  pipuninstall true false false $6
+                pipuninstall false false false $6 ;;
+            2)  pipuninstall true false false $6 ;;
+            3)  pipuninstall false false false $6 ;;
+        esac
+    fi
 fi
