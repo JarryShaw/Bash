@@ -14,24 +14,24 @@ function cleanup {
     printf "\nbrew prune\n"
     brew prune
 
-    if [ -e "/Volumes/" ] ; then
+    if [ -e "/Volumes/Jarry\ Shaw/" ] ; then
         printf "\narchiving caches\n"
-        cp -rf $(brew --cache) /Volumes/Jarry\ Shaw/My\ Files/Utility\ Files/Documents/Utilities/Developers/
-    fi
+        cp -rf $(brew --cache) /Volumes/Jarry\ Shaw/Developers/
 
-    if [ $flag_brew -eq true ] ; then
-        printf "\nbrew cleanup\n"
-        brew cleanup
-    fi
+        if ( $flag_brew ) ; then
+            printf "\nbrew cleanup\n"
+            brew cleanup
+        fi
 
-    if [ $flag_cask -eq true ] ; then
-        printf "\nbrew cask cleanup\n"
-        brew cask cleanup
+        if ( $flag_cask ) ; then
+            printf "\nbrew cask cleanup\n"
+            brew cask cleanup
+        fi
     fi
 }
 
 ################################################################################
-# Clean up caches.
+# Help contents.
 ################################################################################
 
 function help_src {
@@ -54,10 +54,6 @@ function help_src {
 # 
 # $ bash upgrade.sh -m mode -p package      # upgrade `package` of `mode`
 ################################################################################
-
-# # read the options
-# TEMP=`getopt -o ah::m: --long all,help::,mode: -n 'upgrade.sh' -- "$@"`
-# eval set -- "$TEMP"
 
 # set default values
 srcf="none"
@@ -154,8 +150,7 @@ while true ; do
 done
 
 case $mode in
-    "all") 
-        echo 'hi'
+    "all")
         bash ./src.upgrade/upgrade_software.sh $pkgf; sleep 1
         bash ./src.upgrade/upgrade_pip.sh $sysf $hmbf $cpyf $ppyf $verf $pkgf ; sleep 1
         bash ./src.upgrade/upgrade_brew.sh $pkgf ; sleep 1

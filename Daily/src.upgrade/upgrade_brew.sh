@@ -9,7 +9,7 @@ printf "\n-*- Homebrew -*-\n"
 
 case $1 in
     "all")
-        list=$(brew list)
+        list=$( brew list )
         for pkg in $list ; do
             printf "\nbrew upgrade $pkg\n"
             brew upgrade $pkg
