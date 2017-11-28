@@ -32,9 +32,13 @@ function pipupgrade {
         prtf="_pypy$vers"
     fi
 
-    case $4 in 
+    case $4 in
         "all")
-            list=`pipdeptree$prtf | grep -e "=="`
+            printf "\npip$prtf install --upgrade pip\n"
+            $pref/pip$suff install --upgrade --no-cache-dir pip
+
+            # list=`pip$prtf list --not-required`
+            list=`pipdeptree$prtf | grep -e "==" | grep -v "required"`
             for name in $list ; do
                 pkg=${name%==*}
                 printf "\npip$prtf install --upgrade $pkg\n"
