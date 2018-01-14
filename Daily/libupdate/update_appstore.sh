@@ -1,16 +1,20 @@
 #!/bin/bash
 
+
+color=`tput setaf 14`
+reset=`tput sgr0`
+
+
 ################################################################################
 # Check software updates.
 ################################################################################
 
-printf "\n-*- Software -*-\n"
 
-case $1 in
+echo "-*- ${color}App Store${reset} -*-"
+
+case $2 in
     "all")
-        sudo softwareupdate -i -a ;;
-    "none")
-        echo "No updates are done." ;;
+        ( set -x; sudo softwareupdate --no-scan --install --all; ) ;;
     *)
-        sudo softwareupdate -i $1 ;;
+        ( set -x; sudo softwareupdate --install $2; ) ;;
 esac
