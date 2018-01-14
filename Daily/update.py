@@ -3,7 +3,6 @@
 
 
 import argparse
-import os
 import pprint
 import subprocess
 import libupdate
@@ -11,6 +10,14 @@ import libupdate
 
 # version string
 __version__ = '0.3.0'
+
+
+NAME = dict(
+    pip = 'pip',
+    brew = 'Homebrew',
+    cask = 'Caskroom',
+    appstore = 'App Store',
+)
 
 
 def get_parser():
@@ -125,17 +132,9 @@ def main():
     os.system('cls' if os.name=='nt' else 'clear')
 
     for mode in log:
-        if mode == 'pip':
-            name = 'pip'
-        elif mode == 'brew':
-            name = 'Homebrew'
-        elif mode == 'cask':
-            name = 'Caskroom'
-        elif mode == 'appstore':
-            name = 'App Store'
-        else:
-            name = mode
-        pprint.pprint('Updated packages in {}\n\t{}'.format(name, ', '.join(log[mode])))
+        pprint.pprint('Updated packages in {}\n\t{}'.format(
+            NAME.get(mode, mode), ', '.join(log[mode])
+        ))
 
 if __name__ == '__main__':
     main()

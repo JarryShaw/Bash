@@ -10,18 +10,11 @@ import subprocess
 def update_pip(args):
     quiet = '--quiet' if args.quiet else ''
     if 'package' in args and args.package:
-        package = args.package
-        system = args.system
-        brew = args.brew
-        cpython = args.cpython
-        pypy = args.pypy
-        version = args.version
+        package, system, brew, cpython, pypy, version = \
+            args.package, args.system, args.brew, args.cpython, args.pypy, args.version
     else:
         package = 'all'
-        system = True
-        brew = True
-        cpython = True
-        pypy = True
+        system, brew, cpython, pypy = True, True, True, True
         version = 1
 
     if package == 'all':

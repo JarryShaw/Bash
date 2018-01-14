@@ -15,7 +15,7 @@ echo "-*- ${color}Python${reset} -*-"
 # function usage:
 #   pipupdate 2/3 cpython/pypy system/cellar package --quiet
 function pipupdate {
-    if ( $1 ); then
+    if ( $1 ) ; then
         verl="2.7"
         vers=""
     else
@@ -50,7 +50,7 @@ function pipupdate {
             done ;;
         *)
             flag=`$pref/pip$suff list --format="legacy" | grep -w $4`
-            if [[ $flag ]] ; then
+            if [[ -nz $flag ]] ; then
                 ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 $4; )
             fi ;;
     esac

@@ -27,7 +27,7 @@ function caskupdate {
         (set -x; brew cask uninstall $cask $1 --force;)
         (set -x; brew cask install $cask $1 --force;)
     else
-        if ( $1 ) ; then
+        if [[ -z $1 ]] ; then
             echo "${red}${cask}${reset} is ${green}up-to-date${reset}."
         fi
     fi
@@ -40,5 +40,8 @@ case $2 in
             caskupdate $1 $cask
         done ;;
     *)
-        caskupdate $1 $cask ;;
+        flag=`brew cask list | grep -w $2`
+        if [[ $flag ]] ; then
+            caskupdate $1 $2
+        fi ;;
 esac

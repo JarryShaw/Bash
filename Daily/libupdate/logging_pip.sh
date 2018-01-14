@@ -9,7 +9,7 @@
 # function usage:
 #   piplogging 2/3 cpython/pypy system/cellar
 function piplogging {
-    if ( $1 ); then
+    if ( $1 ) ; then
         verl="2.7"
         vers=""
     else
