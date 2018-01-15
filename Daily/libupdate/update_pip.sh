@@ -40,18 +40,17 @@ function pipupdate {
 
     case $4 in
         "all")
-            ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 pip; )
+            ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 pip; ); echo
 
             # list=`pipdeptree$prtf | grep -e "==" | grep -v "required"`
-            list=`$pref/pip$suff list --format="legacy" --not-required --outdate`
+            list=`$pref/pip$suff list --format="legacy" --not-required --outdate | sed 's/\(.*\)* (.*).*/\1/'`
             for name in $list ; do
-                pkg=${name% \(*}
-                ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 $pkg; )
+                ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 $pkg; ); echo
             done ;;
         *)
             flag=`$pref/pip$suff list --format="legacy" | grep -w $4`
             if [[ -nz $flag ]] ; then
-                ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 $4; )
+                ( set -x; $pref/pip$suff install --upgrade --no-cache-dir $5 $4; ); echo
             fi ;;
     esac
 }

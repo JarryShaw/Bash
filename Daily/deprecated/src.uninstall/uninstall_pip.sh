@@ -49,11 +49,11 @@ function pipuninstall {
         case "$pkg" in
             "pip"|"setuptools"|"wheel"|"pipdeptree")
                 : ;;
-            *)  
+            *)
                 printf "\npip$prtf uninstall $pkg\n"
                 $pref/pip$suff uninstall -q $pkg ;;
         esac
-    done 
+    done
 }
 
 if ( $1 ) ; then

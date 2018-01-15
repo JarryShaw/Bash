@@ -3,9 +3,10 @@
 
 
 import argparse
+import libupdate
 import pprint
 import subprocess
-import libupdate
+import sys
 
 
 # version string
@@ -67,10 +68,11 @@ def get_parser():
                         dest='pypy', help=(
                             'Update pip packages on Pypy environment.'
                         ))
-    parser_pip.add_argument('-p', '--package', metavar='PKG',
+    parser_pip.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    # parser_pip.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_brew = subparser.add_parser('brew', description=(
                             'Update Homebrew installed packages.'
@@ -79,10 +81,11 @@ def get_parser():
                         dest='all', help=(
                             'Update all packages installed through pip.'
                         ))
-    parser_brew.add_argument('-p', '--package', metavar='PKG',
+    parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    # parser_brew.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_cask = subparser.add_parser('cask', description=(
                             'Update installed Caskroom packages.'
@@ -91,10 +94,11 @@ def get_parser():
                         dest='all', help=(
                             'Update all packages installed through pip.'
                         ))
-    parser_cask.add_argument('-p', '--package', metavar='PKG',
+    parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    # parser_cask.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_appstore = subparser.add_parser('appstore', description=(
                             'Update App Store installed packages.'
@@ -103,18 +107,21 @@ def get_parser():
                         dest='all', help=(
                             'Update all packages installed through pip.'
                         ))
-    parser_appstore.add_argument('-p', '--package', metavar='PKG',
+    parser_appstore.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    # parser_appstore.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
+    # parser.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
     return parser
 
 def main():
+    # sys.argv.insert(1, '--all')
     parser = get_parser()
     args = parser.parse_args()
 

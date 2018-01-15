@@ -32,10 +32,7 @@ function piplogging {
         prtf="_pypy$vers"
     fi
 
-    list=`$pref/pip$suff list --format="legacy" --not-required --outdate`
-    for name in $list ; do
-        echo ${name% \(*}
-    done
+    $pref/pip$suff list --format="legacy" --not-required --outdate | sed 's/\(.*\)* (.*).*/\1/'
 }
 
 if ( $1 ) ; then

@@ -24,8 +24,8 @@ function caskupdate {
 
     if [[ -z $installed ]] ; then
         echo "${red}${cask}${reset} requires ${red}update${reset}."
-        (set -x; brew cask uninstall $cask $1 --force;)
-        (set -x; brew cask install $cask $1 --force;)
+        (set -x; brew cask uninstall $cask $1 --force;); echo
+        (set -x; brew cask install $cask $1 --force;); echo
     else
         if [[ -z $1 ]] ; then
             echo "${red}${cask}${reset} is ${green}up-to-date${reset}."

@@ -7,38 +7,55 @@ import shlex
 import subprocess
 
 
+def _append_package(args):
+    if 'package' in args and args.package:
+        allflag = False
+        package = set()
+        for pkg in args.package:
+            if allflag: break
+            mapping = map(shlex.split, pkg.split(','))
+            for list_ in mapping:
+                if 'all' in list_:
+                    package = {'all'}
+                    allflag = True; break
+                package += list_
+    else:
+        package = {'all'}
+    return package
+
+
 def update_pip(args):
     quiet = '--quiet' if args.quiet else ''
-    if 'package' in args and args.package:
-        package, system, brew, cpython, pypy, version = \
-            args.package, args.system, args.brew, args.cpython, args.pypy, args.version
-    else:
-        package = 'all'
-        system, brew, cpython, pypy = True, True, True, True
-        version = 1
+    package = _append_package(args)
 
-    if package == 'all':
+    if 'all' in package:
+        system, brew, cpython, pypy, version = True, True, True, True, 1
         logging = subprocess.Popen(
             ['bash', './logging_pip.sh', system, brew, cpython, pypy, version],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log = dict(brew=output.decode().split())
+        log = dict(pip=set(output.decode().split()))
     else:
-        log = dict(brew=package)
+        system, brew, cpython, pypy, version = \
+            args.system, args.brew, args.cpython, args.pypy, args.version
+        log = dict(pip=package)
 
-    process = subprocess.Popen(
-        ['bash', './update_pip.sh', system, brew, cpython, pypy, version, package, quiet],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    output, error = process.communicate()
+    for temppkg in package:
+        process = subprocess.Popen(
+            ['bash', './update_pip.sh', system, brew, cpython, pypy, version, temppkg, quiet],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = process.communicate()
 
+    if args.quiet:
+        print(output.decode())
     return log
 
 
 def update_brew(args):
     quiet = '-q' if args.quiet else ''
-    package = args.package or 'all'
+    package = _append_package(args)
 
     os.system('( set -x; brew update {}; )'.format(quiet))
 
@@ -47,67 +64,76 @@ def update_brew(args):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     output, error = logging.communicate()
-    if args.package:
-        log = dict(brew=package)
+    if 'all' in package:
+        log = dict(brew=set(output.decode().split()))
     else:
-        log = dict(brew=output.decode().split())
+        log = dict(brew=package)
 
-    process = subprocess.Popen(
-        ['bash', './update_brew.sh', quiet, package, output],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    output, error = process.communicate()
+    for temppkg in package:
+        process = subprocess.Popen(
+            ['bash', './update_brew.sh', quiet, temppkg] + shlex.split(output.decode()),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = process.communicate()
 
+    if args.quiet:
+        print(output.decode())
     return log
 
 
 def update_cask(args):
     quiet = '-q' if args.quiet else ''
-    package = args.package or 'all'
+    package = _append_package(args)
 
-    if args.package:
+    if 'all' in package:
         logging = subprocess.Popen(
             shlex.split('brew cask outdated'),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log = dict(cask=package)
+        log = dict(cask=set(output.decode().split()))
     else:
-        log = dict(cask=output.decode().split())
+        log = dict(cask=package)
 
-    process = subprocess.Popen(
-        ['bash', './update_cask.sh', quiet, package],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    output, error = process.communicate()
+    for temppkg in package:
+        process = subprocess.Popen(
+            ['bash', './update_cask.sh', quiet, temppkg],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = process.communicate()
 
+    if args.quiet:
+        print(output.decode())
     return log
 
 
 def update_appstore(args):
     quiet = '-q' if args.quiet else ''
-    package = args.package or 'all'
+    package = _append_package(args)
 
     logging = subprocess.Popen(
         shlex.split('softwareupdate --list'),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     output, error = logging.communicate()
-    if args.package:
+    if 'all' not in package:
         log = dict(appstore=package)
     elif 'No new software available.' in output.decode():
-        log = dict(appstore=list())
+        log = dict(appstore=set())
     else:
-        log = dict(appstore=output.decode().replace(
+        log = dict(appstore=set(output.decode().replace(
                 'Software Update Tool\n\nFinding available software\n', ''
-            ).split())
+            ).split()))
 
-    process = subprocess.Popen(
-        ['bash', './update_appstore.sh', quiet, package],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    output, error = process.communicate()
+    for temppkg in package:
+        process = subprocess.Popen(
+            ['bash', './update_appstore.sh', quiet, temppkg],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = process.communicate()
 
+    if args.quiet:
+        print(output.decode())
     return log
 
 
