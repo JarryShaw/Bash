@@ -4,9 +4,9 @@
 
 import argparse
 import libupdate
+import os
 import pprint
-import subprocess
-import sys
+# import sys
 
 
 # version string
@@ -14,7 +14,7 @@ __version__ = '0.3.0'
 
 
 NAME = dict(
-    pip = 'pip',
+    pip = 'Python',
     brew = 'Homebrew',
     cask = 'Caskroom',
     appstore = 'App Store',
@@ -56,7 +56,7 @@ def get_parser():
                             'installed through official installer.'
                         ))
     parser_pip.add_argument('-b', '--brew', action='store_true', default=False,
-                        dest='cpython', help=(
+                        dest='brew', help=(
                             'Update pip packages on Cellar level, i.e. python '
                             'installed through Homebrew.'
                         ))

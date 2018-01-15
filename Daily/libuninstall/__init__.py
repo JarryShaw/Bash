@@ -76,9 +76,8 @@ def uninstall_brew(args):
         log['brew'] = log['brew'].union(set(output.decode().split()))
 
         process = subprocess.Popen(
-            ['bash', './uninstall_brew.sh', quiet, temppkg, args.yes].extend(
-                shlex.split(output.decode())
-            ),
+            ['bash', './uninstall_brew.sh', quiet, temppkg, str(args.yes).lower()] + \
+                shlex.split(output.decode()),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = process.communicate()

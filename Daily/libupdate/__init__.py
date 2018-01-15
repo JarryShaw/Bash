@@ -18,7 +18,7 @@ def _append_package(args):
                 if 'all' in list_:
                     package = {'all'}
                     allflag = True; break
-                package += list_
+                package = package.union(set(list_))
     else:
         package = {'all'}
     return package
@@ -28,8 +28,8 @@ def update_pip(args):
     quiet = '--quiet' if args.quiet else ''
     package = _append_package(args)
 
-    if 'all' in package:
-        system, brew, cpython, pypy, version = True, True, True, True, 1
+    if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
+        system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
         logging = subprocess.Popen(
             ['bash', './logging_pip.sh', system, brew, cpython, pypy, version],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -38,7 +38,8 @@ def update_pip(args):
         log = dict(pip=set(output.decode().split()))
     else:
         system, brew, cpython, pypy, version = \
-            args.system, args.brew, args.cpython, args.pypy, args.version
+            str(args.system).lower(), str(args.brew).lower(), \
+            str(args.cpython).lower(), str(args.pypy).lower(), str(args.version)
         log = dict(pip=package)
 
     for temppkg in package:
@@ -71,7 +72,8 @@ def update_brew(args):
 
     for temppkg in package:
         process = subprocess.Popen(
-            ['bash', './update_brew.sh', quiet, temppkg] + shlex.split(output.decode()),
+            ['bash', './update_brew.sh', quiet, temppkg] + \
+                shlex.split(output.decode()),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = process.communicate()
