@@ -14,8 +14,10 @@ reset=`tput sgr0`
 echo "-*- ${color}Python${reset} -*-"
 
 # function usage
-#   pip_fixmissing --quiet missing
+#   pip_fixmissing --quiet missing pref suff
 function pip_fixmissing {
+    pref=$3
+    suff=$4
     for $name in $2 ; do
         if [[ -z $1 ]] ; then
             ( set -x; $pref/pip$suff install --no-cache-dir $name; ); echo
@@ -66,14 +68,14 @@ function pipuninstall {
     miss=`$pref/pip$suff check | sed 's/.*requires \(.*\)*, .*/\1/' | sort -u | xargs`
     if [[ -nz $miss ]] ; then
         if ( $6 ) ; then
-            pip_fixmissing $5 $miss
+            pip_fixmissing $5 $miss $pref $suff
         else
             echo "Required packages found missing: ${red}${miss}${reset}"
             while true ; do
                 read -p "Would you like to fix? (y/N)" yn
                 case $yn in
                     [Yy]* )
-                        pip_fixmissing $5 $miss
+                        pip_fixmissing $5 $miss $pref $suff
                         break ;;
                     [Nn]* ) : ;;
                     * ) echo "Invalid choice.";;

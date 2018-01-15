@@ -4,6 +4,8 @@
 
 import argparse
 import libuninstall
+import os
+import pprint
 
 
 # version string
@@ -11,7 +13,7 @@ __version__ = '0.3.0'
 
 
 NAME = dict(
-    pip = 'pip',
+    pip = 'Python',
     brew = 'Homebrew',
     cask = 'Caskroom',
 )
@@ -59,7 +61,7 @@ def get_parser():
                         dest='pypy', help=(
                             'Uninstall pip packages on Pypy environment.'
                         ))
-    parser_pip.add_argument('-p', '--package', metavar='PKG', action='append'
+    parser_pip.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be uninstalld, default is null.'
                         ))
@@ -75,7 +77,7 @@ def get_parser():
                         dest='all', help=(
                             'Uninstall all packages installed through pip.'
                         ))
-    parser_brew.add_argument('-p', '--package', metavar='PKG', action='append'
+    parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be uninstalld, default is null.'
                         ))
@@ -91,7 +93,7 @@ def get_parser():
                         dest='all', help=(
                             'Uninstall all packages installed through pip.'
                         ))
-    parser_cask.add_argument('-p', '--package', metavar='PKG', action='append'
+    parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be uninstalld, default is null.'
                         ))

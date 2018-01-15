@@ -18,7 +18,7 @@ def _append_package(args):
                 if 'all' in list_:
                     package = {'all'}
                     allflag = True; break
-                package += list_
+                package = package.union(set(list_))
     else:
         package = {'null'}
     return package
@@ -32,11 +32,12 @@ def uninstall_pip(args):
     if 'null' in package:
         return log
 
-    if 'all' in package:
-        yes, system, brew, cpython, pypy, version = True, True, True, True, True, 1
+    if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
+        yes, system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', 'true', '1'
     else:
         yes, system, brew, cpython, pypy, version = \
-            args.yes, args.system, args.brew, args.cpython, args.pypy, args.version
+            str(args.yes).lower(), str(args.system).lower(), str(args.brew).lower(), \
+            str(args.cpython).lower(), str(args.pypy).lower(), str(args.version)
 
     for temppkg in package:
         logging = subprocess.Popen(
@@ -44,7 +45,7 @@ def uninstall_pip(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log.get('pip') += set(output.decode().split())
+        log['pip'] = log['pip'].union(set(output.decode().split()))
 
         process = subprocess.Popen(
             ['bash', './uninstall_pip.sh', system, brew,
@@ -72,11 +73,12 @@ def uninstall_brew(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log.get('brew') += set(output.decode().split())
+        log['brew'] = log['brew'].union(set(output.decode().split()))
 
         process = subprocess.Popen(
-            ['bash', './uninstall_brew.sh', quiet, temppkg, args.yes] \
-                + shlex.split(output.decode()),
+            ['bash', './uninstall_brew.sh', quiet, temppkg, args.yes].extend(
+                shlex.split(output.decode())
+            ),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = process.communicate()
@@ -99,9 +101,9 @@ def uninstall_cask(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log.get('cask') += set(output.decode().split())
+        log['cask'] = log['cask'].union(set(output.decode().split()))
     else:
-        log.get('cask') += package
+        log['cask'] = log['cask'].union(package)
 
     for temppkg in package:
         process = subprocess.Popen(
@@ -118,8 +120,8 @@ def uninstall_cask(args):
 def uninstall_all(args):
     log = uninstall_pip(args)
     os.system('cls' if os.name=='nt' else 'clear')
-    log += uninstall_brew(args)
+    log.update(uninstall_brew(args))
     os.system('cls' if os.name=='nt' else 'clear')
-    log += uninstall_cask(args)
+    log.update(uninstall_cask(args))
 
     return log
