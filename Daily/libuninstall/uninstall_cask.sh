@@ -1,25 +1,24 @@
 #!/bin/bash
 
+
+color=`tput setaf 14`
+reset=`tput sgr0`
+
+
 ################################################################################
 # Uninstall Caskroom packages.
 ################################################################################
 
-if ( $1 ) ; then
-    tmp="Caskroom"
-fi
 
-printf "\n-*- Uninstalling $tmp & Dependencies -*-\n"
+echo "-*- ${color}Caskroom${reset} -*-"
 
-case $1 in
+case $2 in
     "all")
         list=$( brew cask list ) ;;
-    "none")
-        echo "No uninstallation is done." ; exit 0 ;;
     *)
-        list=$1 ;;
+        list=$2 ;;
 esac
 
 for pkg in $list ; do
-    printf "\nbrew uninstall $pkg\n"
-    brew uninstall --ignore-dependencies $pkg
+    ( set -x; brew cask uninstall --froce $1 $pkg; )
 done

@@ -1,16 +1,33 @@
 #!/bin/bash
 
+red=`tput setaf 1`
+green=`tput setaf 2`
+color=`tput setaf 14`
+reset=`tput sgr0`
+
+
 ################################################################################
 # Uninstall Python site packages.
 ################################################################################
 
-if ( $1 ) ; then
-    tmp="all"
-fi
 
-printf "\n-*- Uninstalling $tmp & Dependencies -*-\n"
+echo "-*- ${color}Python${reset} -*-"
 
-# pipuninstall 2/3 cpython/pypy system/cellar
+# function usage
+#   pip_fixmissing --quiet missing
+function pip_fixmissing {
+    for $name in $2 ; do
+        if [[ -z $1 ]] ; then
+            ( set -x; $pref/pip$suff install --no-cache-dir $name; ); echo
+        else
+            $pref/pip$suff install --no-cache-dir $1 $name
+        fi
+    done
+    echo "${green}Missing packages installed.${reset}"
+}
+
+# function usage:
+#   pipuninstall 2/3 cpython/pypy system/cellar package --quiet --yes
 function pipuninstall {
     if ( $1 ); then
         verl="2.7"
@@ -35,52 +52,62 @@ function pipuninstall {
         prtf="_pypy$vers"
     fi
 
-    case $4 in 
+    case $4 in
         "all")
-            list=`$pref/pip$suff freeze | grep -e "=="` ;;
-        "none")
-            echo "No uninstallation is done." ; exit 0 ;;
+            list=`$pref/pip$suff freeze | sed 's/ *\(.*\)*==.*/\1/'` ;;
         *)
-            list=`pipdeptree$prtf -f -p $4 | grep -e "=="` ;;
+            list=`pipdeptree$prtf -f -w silence -p $4 | sed 's/ *\(.*\)*==.*/\1/' | sort -u` ;;
     esac
 
     for name in $list ; do
-        pkg=${name%==*}
-        case "$pkg" in
-            "pip"|"setuptools"|"wheel"|"pipdeptree")
-                : ;;
-            *)  
-                printf "\npip$prtf uninstall $pkg\n"
-                $pref/pip$suff uninstall -q $pkg ;;
-        esac
-    done 
+        ( set -x; $pref/pip$suff uninstall -y $5 $pkg; ); echo
+    done
+
+    miss=`$pref/pip$suff check | sed 's/.*requires \(.*\)*, .*/\1/' | sort -u | xargs`
+    if [[ -nz $miss ]] ; then
+        if ( $6 ) ; then
+            pip_fixmissing $5 $miss
+        else
+            echo "Required packages found missing: ${red}${miss}${reset}"
+            while true ; do
+                read -p "Would you like to fix? (y/N)" yn
+                case $yn in
+                    [Yy]* )
+                        pip_fixmissing $5 $miss
+                        break ;;
+                    [Nn]* ) : ;;
+                    * ) echo "Invalid choice.";;
+                esac
+            done
+        fi
+    fi
 }
 
 if ( $1 ) ; then
     case "$5" in
-        1)  pipuninstall true true true $6
-            pipuninstall false true true $6 ;;
-        2)  pipuninstall true true true $6 ;;
-        3)  pipuninstall false true true $6 ;;
+        1)  pipuninstall true true true $6 $7 $8
+            pipuninstall false true true $6 $7 $8 ;;
+        2)  pipuninstall true true true $6 $7 $8 ;;
+        3)  pipuninstall false true true $6 $7 $8 ;;
     esac
 fi
 
 if ( $2 ) ; then
     if ( $3 ) ; then
         case "$5" in
-            1)  pipuninstall true true false $6
-                pipuninstall false true false $6 ;;
-            2)  pipuninstall true true false $6 ;;
-            3)  pipuninstall false true false $6 ;;
+            1)  pipuninstall true true false $6 $7 $8
+                pipuninstall false true false $6 $7 $8 ;;
+            2)  pipuninstall true true false $6 $7 $8 ;;
+            3)  pipuninstall false true false $6 $7 $8 ;;
         esac
     fi
 
     if ( $4 ) ; then
         case "$5" in
-            1)  pipuninstall true false false $6
-                pipuninstall false false false $6 ;;
-            2)  pipuninstall true false false $6 ;;
-            3)  pipuninstall false false false $6 ;;
+            1)  pipuninstall true false false $6 $7 $8
+                pipuninstall false false false $6 $7 $8 ;;
+            2)  pipuninstall true false false $6 $7 $8 ;;
+            3)  pipuninstall false false false $6 $7 $8 ;;
         esac
     fi
 fi
