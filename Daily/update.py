@@ -5,8 +5,6 @@
 import argparse
 import libupdate
 import os
-import pprint
-# import sys
 
 
 # version string
@@ -72,6 +70,10 @@ def get_parser():
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    parser_pip.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
     # parser_pip.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_brew = subparser.add_parser('brew', description=(
@@ -84,6 +86,10 @@ def get_parser():
     parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
+                        ))
+    parser_brew.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
                         ))
     # parser_brew.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -98,6 +104,10 @@ def get_parser():
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    parser_cask.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
     # parser_cask.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_appstore = subparser.add_parser('appstore', description=(
@@ -110,6 +120,10 @@ def get_parser():
     parser_appstore.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
+                        ))
+    parser_appstore.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
                         ))
     # parser_appstore.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -139,9 +153,11 @@ def main():
     os.system('cls' if os.name=='nt' else 'clear')
 
     for mode in log:
-        pprint.pprint('Updated packages in {}\n\t{}'.format(
-            NAME.get(mode, mode), ', '.join(log[mode])
-        ))
+        if log[mode]:
+            print(log[mode])
+            print('Updated packages in {}\n\t{}'.format(
+                NAME.get(mode, mode), ', '.join(log[mode])
+            ))
 
 if __name__ == '__main__':
     main()

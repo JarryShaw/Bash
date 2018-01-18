@@ -7,7 +7,7 @@ import shlex
 import subprocess
 
 
-def _append_package(args):
+def _merge_packages(args):
     if 'package' in args and args.package:
         allflag = False
         package = set()
@@ -26,7 +26,7 @@ def _append_package(args):
 
 def update_pip(args):
     quiet = '--quiet' if args.quiet else ''
-    package = _append_package(args)
+    package = _merge_packages(args)
 
     if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
         system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
@@ -43,22 +43,25 @@ def update_pip(args):
         log = dict(pip=package)
 
     for temppkg in package:
-        process = subprocess.Popen(
-            ['bash', './update_pip.sh', system, brew, cpython, pypy, version, temppkg, quiet],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        subprocess.run(
+            ['bash', 'libupdate/update_pip.sh', system, brew, cpython, pypy, version, temppkg, quiet]
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def update_brew(args):
-    quiet = '-q' if args.quiet else ''
-    package = _append_package(args)
+    quiet = '--quiet' if args.quiet else ''
+    package = _merge_packages(args)
 
-    os.system('( set -x; brew update {}; )'.format(quiet))
+    update = subprocess.Popen(
+        shlex.split('brew update'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    output, error = update.communicate()
+    if not quiet:
+        print('+ brew update')
+        print(output.decode())
 
     logging = subprocess.Popen(
         shlex.split('brew outdated'),
@@ -70,22 +73,18 @@ def update_brew(args):
     else:
         log = dict(brew=package)
 
+    outdated = 'true' if output else 'false'
     for temppkg in package:
-        process = subprocess.Popen(
-            ['bash', './update_brew.sh', quiet, temppkg] + \
-                shlex.split(output.decode()),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        subprocess.run(
+            ['bash', 'libupdate/update_brew.sh', temppkg, quiet, outdated] + shlex.split(output.decode())
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def update_cask(args):
-    quiet = '-q' if args.quiet else ''
-    package = _append_package(args)
+    quiet = '--quiet' if args.quiet else ''
+    package = _merge_packages(args)
 
     if 'all' in package:
         logging = subprocess.Popen(
@@ -97,21 +96,19 @@ def update_cask(args):
     else:
         log = dict(cask=package)
 
+    outdated = 'true' if output else 'false'
     for temppkg in package:
-        process = subprocess.Popen(
-            ['bash', './update_cask.sh', quiet, temppkg],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        subprocess.run(
+            ['bash', 'libupdate/update_cask.sh', temppkg, quiet, outdated]
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def update_appstore(args):
-    quiet = '-q' if args.quiet else ''
-    package = _append_package(args)
+    quiet = '--quiet' if args.quiet else ''
+    package = _merge_packages(args)
+    outdated = 'false'
 
     logging = subprocess.Popen(
         shlex.split('softwareupdate --list'),
@@ -126,26 +123,23 @@ def update_appstore(args):
         log = dict(appstore=set(output.decode().replace(
                 'Software Update Tool\n\nFinding available software\n', ''
             ).split()))
+        outdated = 'true'
 
     for temppkg in package:
-        process = subprocess.Popen(
-            ['bash', './update_appstore.sh', quiet, temppkg],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        subprocess.run(
+            ['bash', 'libupdate/update_appstore.sh', temppkg, quiet, outdated]
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def update_all(args):
     log = update_pip(args)
     os.system('cls' if os.name=='nt' else 'clear')
-    log += update_brew(args)
+    log.update(update_brew(args))
     os.system('cls' if os.name=='nt' else 'clear')
-    log += update_cask(args)
+    log.update(update_cask(args))
     os.system('cls' if os.name=='nt' else 'clear')
-    log += update_appstore(args)
+    log.update(update_appstore(args))
 
     return log
