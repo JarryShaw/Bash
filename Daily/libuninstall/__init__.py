@@ -45,23 +45,24 @@ def uninstall_pip(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log['pip'] = log['pip'].union(set(output.decode().split()))
+        if not logging.returncode:
+            log['pip'] = log['pip'].union(set([temppkg] + output.decode().split()))
+        else:
+            return log
 
-        process = subprocess.Popen(
-            ['bash', './uninstall_pip.sh', system, brew,
-                cpython, pypy, version, temppkg, quiet, yes],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        installed = 'false' if logging.returncode else 'true'
+        subprocess.run(
+            ['bash', './uninstall_pip.sh', system, brew, cpython, pypy, version, \
+                temppkg, quiet, yes, installed, temppkg] + shlex.split(output.decode())
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def uninstall_brew(args):
-    quiet = '-q' if args.quiet else ''
+    quiet = '--quiet' if args.quiet else ''
     package = _append_package(args)
+    yes = str(args.yes).lower()
 
     log = dict(brew=set())
     if 'null' in package:
@@ -73,22 +74,21 @@ def uninstall_brew(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log['brew'] = log['brew'].union(set(output.decode().split()))
+        if not logging.returncode:
+            log['brew'] = log['brew'].union(set([temppkg] + output.decode().split()))
+        else:
+            return log
 
-        process = subprocess.Popen(
-            ['bash', './uninstall_brew.sh', quiet, temppkg, str(args.yes).lower()] + \
-                shlex.split(output.decode()),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        installed = 'false' if logging.returncode else 'true'
+        subprocess.run(
+            ['bash', './uninstall_brew.sh', quiet, yes, installed, temppkg] + shlex.split(output.decode())
         )
-        output, error = process.communicate()
 
-    if args.quiet:
-        print(output.decode())
     return log
 
 
 def uninstall_cask(args):
-    quiet = '-q' if args.quiet else ''
+    quiet = '--quiet' if args.quiet else ''
     package = _append_package(args)
 
     log = dict(cask=set())

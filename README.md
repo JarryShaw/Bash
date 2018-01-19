@@ -1,27 +1,31 @@
 # Scripts
 
+
 Just some useful bash scripts.
 
 
+&nbsp;
 
-* `upgrade.sh`
 
-  Automatically upgrade / update all applications installed (on `macOS`), packages installed by `pip` (of Python 2.7 and Python 3.6 in `CPython` and `Pypy` compiler), and softwares installed through `Homebrew`.
+- `update.py`
 
-  ```Shell
-  # upgrade all
-  $ bash upgrade.sh
-  $ bash upgrade.sh -a
+&emsp; &emsp; Automatically update / update all applications installed (on `macOS`), packages installed by `pip` (of Python 2.7 and Python 3.6 in `CPython` and `Pypy` compiler), and softwares installed through `Homebrew`.
 
-  # upgrade all of `mode`
-  $ bash upgrade.sh -m mode
-  $ bash upgrade.sh -m mode -a
+```shell
+# update all
+$ python3 update.py
+$ python3 update.py -a
 
-  # upgrade `package` of `mode`
-  $ bash upgrade.sh -m mode -p package
-  ```
+# update all of `mode` -- pip / brew / cask / appstore
+$ python3 update.py mode
+$ python3 update.py mode -a
 
-  ​
+# update `package` of `mode`
+$ python update.py mode -p package
+```
+
+
+&nbsp;
 
 * `uninstall.sh`
 
@@ -136,7 +140,7 @@ Just some useful bash scripts.
     ```Shell
     # show all dependencies
     $ bash dependency.sh pip                  
-    $ bash dependency.sh pip -a 
+    $ bash dependency.sh pip -a
 
     # show dependency of `package`
     $ bash dependency.sh pip -p package

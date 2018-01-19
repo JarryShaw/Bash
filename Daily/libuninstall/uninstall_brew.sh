@@ -1,48 +1,85 @@
 #!/bin/bash
 
 
-red=`tput setaf 1`
-green=`tput setaf 2`
-color=`tput setaf 14`
-reset=`tput sgr0`
-
-
 ################################################################################
 # Uninstall Homebrew packages.
+#
+# Parameter list:
+#   1. Quiet Flag
+#   2. Yes Flag
+#   3. Installed Flag
+#   4. Dependency Package
+#   ............
 ################################################################################
 
 
-echo "-*- ${color}Homebrew${reset} -*-"
-
+# brew fix missing function usage
+#   brew_fixmissing set/: [--quiet] packages
 function brew_fixmissing {
-    for $name in $2 ; do
-        if [[ -z $1 ]] ; then
-            ( set -x; brew install $name; ); echo
-        else
-            brew install $1 $name
+    quiet=$1
+
+    # reinstall missing packages
+    for $name in ${*:3} ; do
+        ( $quiet; brew install $name $2; )
+        if [[ -z $2 ]] ; then
+            echo ;
         fi
     done
-    echo "${green}Missing packages installed.${reset}"
+
+    # inform if missing packages fixed
+    if [[ -z $2 ]] ; then
+        echo "${green}All missing packages installed.${reset}"
+    fi
 }
 
-for pkg in ${*:4} ; do
-    ( set -x; brew uninstall --force --ignore-dependencies $1 $pkg; )
+
+# Preset Terminal Output Colours
+red=`tput setaf 1`      # red
+green=`tput setaf 2`    # green
+color=`tput setaf 14`   # blue
+reset=`tput sgr0`       # reset
+
+
+# if quiet flag not set
+if [[ -z $1 ]] ; then
+    echo "-*- ${color}Homebrew${reset} -*-"
+    echo ;
+    if ( ! $3 ) ; then
+        echo "${green}No package names $4 installed.${reset}"
+        exit 0
+    fi
+    quiet="set -x"
+else
+    quiet=":"
+fi
+
+
+# uninstall all dependency packages
+for name in ${*:4} ; do
+    ( $quiet; brew uninstall --force --ignore-dependencies $name $1; )
+    if [[ -z $1 ]] ; then
+        echo ;
+    fi
 done
 
+
+# fix missing brew dependencies
 miss=`brew missing | sed 's/.*: \(.*\)*/\1/' | sort -u | xargs`
 if [[ -nz $miss ]] ; then
     echo "Required packages found missing: ${red}${miss}${reset}"
-    if ( $3 ) ; then
-        brew_fixmissing $1 $miss
+    if ( $2 ) ; then
+        brew_fixmissing $quiet $1 $miss
     else
         while true ; do
             read -p "Would you like to fix? (y/N)" yn
             case $yn in
                 [Yy]* )
-                    brew_fixmissing $1 $miss
+                    brew_fixmissing $quiet $1 $miss
                     break ;;
-                [Nn]* ) : ;;
-                * ) echo "Invalid choice.";;
+                [Nn]* )
+                    : ;;
+                * )
+                    echo "Invalid choice." ;;
             esac
         done
     fi

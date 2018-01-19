@@ -5,7 +5,6 @@
 import argparse
 import libuninstall
 import os
-import pprint
 
 
 # version string
@@ -69,6 +68,10 @@ def get_parser():
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
+    parser_pip.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
 
     parser_brew = subparser.add_parser('brew', description=(
                             'Uninstall Homebrew installed packages.'
@@ -85,6 +88,10 @@ def get_parser():
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
+    parser_brew.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
 
     parser_cask = subparser.add_parser('cask', description=(
                             'Uninstall installed Caskroom packages.'
@@ -97,6 +104,10 @@ def get_parser():
                         dest='package', help=(
                             'Name of packages to be uninstalld, default is null.'
                         ))
+    parser_cask.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
 
     parser.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
@@ -106,7 +117,9 @@ def get_parser():
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
+
     return parser
+
 
 def main():
     parser = get_parser()
@@ -121,12 +134,16 @@ def main():
     else:
         log = libuninstall.uninstall_all(args)
 
-    os.system('cls' if os.name=='nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
     for mode in log:
-        pprint.pprint('Uninstalld packages in {}\n\t{}'.format(
-            NAME.get(mode, mode), ', '.join(log[mode])
-        ))
+        if log[mode]:
+            print('Uninstalled packages in {}\n\t{}'.format(
+                NAME.get(mode, mode), ', '.join(log[mode])
+            ))
+        else:
+            print('No uninstallation in {}'.format(NAME.get(mode, mode)))
+
 
 if __name__ == '__main__':
     main()
