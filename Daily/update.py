@@ -81,7 +81,7 @@ def get_parser():
                         ))
     parser_brew.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
-                            'Update all packages installed through pip.'
+                            'Update all packages installed through Homebrew.'
                         ))
     parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
@@ -98,7 +98,7 @@ def get_parser():
                         ))
     parser_cask.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
-                            'Update all packages installed through pip.'
+                            'Update all packages installed through Caskroom.'
                         ))
     parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
@@ -115,7 +115,7 @@ def get_parser():
                         ))
     parser_appstore.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
-                            'Update all packages installed through pip.'
+                            'Update all packages installed through App Store.'
                         ))
     parser_appstore.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(

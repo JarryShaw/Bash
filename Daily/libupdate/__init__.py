@@ -35,11 +35,7 @@ def update_pip(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        if not logging.returncode:
-            log = dict(pip=set(output.decode().split()))
-        else:
-            log = dict(pip=set())
-            return log
+        log = dict(pip=set(output.decode().split()))
     else:
         system, brew, cpython, pypy, version = \
             str(args.system).lower(), str(args.brew).lower(), \

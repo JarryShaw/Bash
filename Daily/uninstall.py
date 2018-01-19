@@ -78,7 +78,7 @@ def get_parser():
                         ))
     parser_brew.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
-                            'Uninstall all packages installed through pip.'
+                            'Uninstall all packages installed through Homebrew.'
                         ))
     parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
@@ -98,7 +98,7 @@ def get_parser():
                         ))
     parser_cask.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
-                            'Uninstall all packages installed through pip.'
+                            'Uninstall all packages installed through Caskroom.'
                         ))
     parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(

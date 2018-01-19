@@ -90,7 +90,8 @@ reset=`tput sgr0`       # reset
 
 # if quiet flag not set
 if [[ -z $7 ]] ; then
-    echo "-*- ${color}Python${reset} -*-\n"
+    echo "-*- ${color}Python${reset} -*-"
+    echo ;
 fi
 
 

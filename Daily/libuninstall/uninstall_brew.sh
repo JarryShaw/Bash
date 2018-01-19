@@ -64,7 +64,7 @@ done
 
 
 # fix missing brew dependencies
-miss=`brew missing | sed 's/.*: \(.*\)*/\1/' | sort -u | xargs`
+miss=`brew missing | sed "s/.*: \(.*\)*/\1/" | sort -u | xargs`
 if [[ -nz $miss ]] ; then
     echo "Required packages found missing: ${red}${miss}${reset}"
     if ( $2 ) ; then

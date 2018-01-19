@@ -24,9 +24,9 @@ def _merge_packages(args):
     return package
 
 
-def dependency_pip(args):
+def reinstall(args):
     pass
 
 
-def dependency_brew(args):
+def postinstall(args):
     pass

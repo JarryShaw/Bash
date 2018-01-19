@@ -48,9 +48,9 @@ function piplogging {
     # Verbose or Quiet
     case $4 in
         "all")
-            $pref/pip$suff list --format="legacy" | sed 's/\(.*\)* (.*).*/\1/' ;;
+            $pref/pip$suff list --format="legacy" | sed "s/\(.*\)* (.*).*/\1/" ;;
         *)
-            # pipdeptree$prtf -f -w silence -p $4 | sed 's/ *\(.*\)*==.*/\1/' | sort -u ;;
+            # pipdeptree$prtf -f -w silence -p $4 | sed "s/ *\(.*\)*==.*/\1/" | sort -u ;;
             $pref/pip$suff show $4 | grep -w "Requires" | sed "s/Requires: \(.*\)*/\1/" | sed "s/,//g"
     esac
 }

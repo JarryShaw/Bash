@@ -45,12 +45,10 @@ def uninstall_pip(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        if not logging.returncode:
+        if output:
             log['pip'] = log['pip'].union(set([temppkg] + output.decode().split()))
-        else:
-            return log
 
-        installed = 'false' if logging.returncode else 'true'
+        installed = 'false' if output else 'true'
         subprocess.run(
             ['bash', './uninstall_pip.sh', system, brew, cpython, pypy, version, \
                 temppkg, quiet, yes, installed, temppkg] + shlex.split(output.decode())
@@ -74,12 +72,10 @@ def uninstall_brew(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        if not logging.returncode:
+        if output:
             log['brew'] = log['brew'].union(set([temppkg] + output.decode().split()))
-        else:
-            return log
 
-        installed = 'false' if logging.returncode else 'true'
+        installed = 'false' if output else 'true'
         subprocess.run(
             ['bash', './uninstall_brew.sh', quiet, yes, installed, temppkg] + shlex.split(output.decode())
         )
