@@ -21,14 +21,22 @@ reset=`tput sgr0`       # reset
 
 # if quiet flag not set
 if [[ -z $2 ]] ; then
-    echo "-*- ${color}Homebrew${reset} -*-"
-    qflg="set -x"
+    # echo "-*- ${color}Homebrew${reset} -*-"
+
+    # if no outdated packages found
     if ( ! $3 ) ; then
         echo "${green}All packages have been up-to-date.${reset}"
         exit 0
     fi
+
+    quiet="set -x"
 else
-    qflg=":"
+    # if no outdated packages found
+    if ( ! $3 ) ; then
+        exit 0;
+    fi
+
+    quiet=":"
 fi
 
 
@@ -37,10 +45,14 @@ case $1 in
     "all")
         # parameters since fourth are outdated packages
         for pkg in ${*:4} ; do
-            ( $qflg; brew upgrade $pkg; )
-            echo
+            ( $quiet; brew upgrade $pkg $2; )
+            if [[ -z $2 ]] ; then
+                echo ;
+            fi
         done ;;
     *)
-        ( $qflg; brew upgrade $1; )
-        echo ;;
+        ( $quiet; brew upgrade $1 $2; )
+        if [[ -z $2 ]] ; then
+            echo ;
+        fi ;;
 esac

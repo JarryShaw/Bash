@@ -132,7 +132,9 @@ def get_parser():
                             'Run in quiet mode, with no output information.'
                         ))
     # parser.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
+
     return parser
+
 
 def main():
     # sys.argv.insert(1, '--all')
@@ -150,14 +152,16 @@ def main():
     else:
         log = libupdate.update_all(args)
 
-    os.system('cls' if os.name=='nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
     for mode in log:
         if log[mode]:
-            print(log[mode])
             print('Updated packages in {}\n\t{}'.format(
                 NAME.get(mode, mode), ', '.join(log[mode])
             ))
+        else:
+            print('No updates in {}'.format(NAME.get(mode, mode)))
+
 
 if __name__ == '__main__':
     main()

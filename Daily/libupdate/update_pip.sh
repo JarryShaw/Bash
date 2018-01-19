@@ -49,28 +49,35 @@ function pipupdate {
 
     # Verbose or Quiet
     if [[ -z $5 ]]; then
-        qflg="set -x"
+        quiet="set -x"
     else
-        qflg=":"
+        quiet=":"
     fi
 
     # All or Specified Packages
     case $4 in
         "all")
-            ( $qflg; $pref/pip$suff install --upgrade --no-cache-dir pip; )
-            echo
+            if [[ -z $5 ]]; then
+                echo "+ pip$prtf install --upgrade --no-cache-dir pip $5"
+                $pref/pip$suff install --upgrade --no-cache-dir pip $5
+                echo ;
+            fi
 
             # list=`pipdeptree$prtf | grep -e "==" | grep -v "required"`
-            list=`$pref/pip$suff list --format="legacy" --not-required --outdate | sed 's/\(.*\)* (.*).*/\1/'`
+            list=`$pref/pip$suff list --format="legacy" --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
             for name in $list ; do
-                ( $qflg; $pref/pip$suff install --upgrade --no-cache-dir $name; )
-                echo
+                if [[ -z $5 ]]; then
+                    echo "+ pip$prtf install --upgrade --no-cache-dir $name $5"
+                    $pref/pip$suff install --upgrade --no-cache-dir $name $5
+                    echo ;
+                fi
             done ;;
         *)
             flag=`$pref/pip$suff list --format="legacy" | grep -w $4`
-            if [[ -nz $flag ]] ; then
-                ( $qflg; $pref/pip$suff install --upgrade --no-cache-dir $4; )
-                echo
+            if [[ -nz $flag ]] && [[ -z $5 ]] ; then
+                echo "+ pip$prtf install --upgrade --no-cache-dir $4 $5"
+                $pref/pip$suff install --upgrade --no-cache-dir $4 $5
+                echo ;
             fi ;;
     esac
 }
@@ -83,7 +90,7 @@ reset=`tput sgr0`       # reset
 
 # if quiet flag not set
 if [[ -z $7 ]] ; then
-    echo "-*- ${color}Python${reset} -*-"
+    echo "-*- ${color}Python${reset} -*-\n"
 fi
 
 

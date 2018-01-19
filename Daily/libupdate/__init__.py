@@ -35,7 +35,11 @@ def update_pip(args):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         output, error = logging.communicate()
-        log = dict(pip=set(output.decode().split()))
+        if not logging.returncode:
+            log = dict(pip=set(output.decode().split()))
+        else:
+            log = dict(pip=set())
+            return log
     else:
         system, brew, cpython, pypy, version = \
             str(args.system).lower(), str(args.brew).lower(), \
@@ -50,18 +54,21 @@ def update_pip(args):
     return log
 
 
-def update_brew(args):
+def update_brew(args, *, cleanup=True):
     quiet = '--quiet' if args.quiet else ''
     package = _merge_packages(args)
 
-    update = subprocess.Popen(
-        shlex.split('brew update'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    output, error = update.communicate()
-    if not quiet:
-        print('+ brew update')
-        print(output.decode())
+    if quiet:
+        update = subprocess.Popen(
+            shlex.split('brew update {}'.format(quiet)),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = update.communicate()
+    else:
+        os.system('echo "-*- $({color})Homebrew$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
+        os.system('( set -x; brew update; )')
 
     logging = subprocess.Popen(
         shlex.split('brew outdated'),
@@ -79,10 +86,15 @@ def update_brew(args):
             ['bash', 'libupdate/update_brew.sh', temppkg, quiet, outdated] + shlex.split(output.decode())
         )
 
+    if cleanup:
+        subprocess.run(
+            ['bash', 'libupdate/cleanup.sh']
+        )
+
     return log
 
 
-def update_cask(args):
+def update_cask(args, *, cleanup=True):
     quiet = '--quiet' if args.quiet else ''
     package = _merge_packages(args)
 
@@ -100,6 +112,11 @@ def update_cask(args):
     for temppkg in package:
         subprocess.run(
             ['bash', 'libupdate/update_cask.sh', temppkg, quiet, outdated]
+        )
+
+    if cleanup:
+        subprocess.run(
+            ['bash', 'libupdate/cleanup.sh']
         )
 
     return log
@@ -135,11 +152,15 @@ def update_appstore(args):
 
 def update_all(args):
     log = update_pip(args)
-    os.system('cls' if os.name=='nt' else 'clear')
-    log.update(update_brew(args))
-    os.system('cls' if os.name=='nt' else 'clear')
-    log.update(update_cask(args))
-    os.system('cls' if os.name=='nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
+    log.update(update_brew(args, cleanup=False))
+    os.system('cls' if os.name == 'nt' else 'clear')
+    log.update(update_cask(args, cleanup=False))
+    os.system('cls' if os.name == 'nt' else 'clear')
     log.update(update_appstore(args))
+
+    subprocess.run(
+        ['bash', 'libupdate/cleanup.sh']
+    )
 
     return log

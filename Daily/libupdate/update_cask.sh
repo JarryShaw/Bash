@@ -30,13 +30,15 @@ function caskupdate {
 
     if [[ -z $installed ]] ; then
         echo "${red}${cask}${reset} requires ${red}update${reset}."
-        ( $quiet; brew cask uninstall $cask $1 --force; )
-        ( $quiet; brew cask install $cask $1 --force; )
-        echo
+        ( $quiet; brew cask uninstall --force $2 $cask; )
+        ( $quiet; brew cask install --force $2 $cask; )
+        if [[ -z $2 ]] ; then
+            echo ;
+        fi
     else
         if [[ -z $2 ]] ; then
             echo "${red}${cask}${reset} is ${green}up-to-date${reset}."
-            echo
+            echo ;
         fi
     fi
 }
@@ -52,8 +54,16 @@ reset=`tput sgr0`       # reset
 # if quiet flag not set
 if [[ -z $2 ]] ; then
     echo "-*- ${color}Caskroom${reset} -*-"
+    echo ;
+
+    # if no outdated packages found
     if ( ! $3 ) ; then
         echo "${green}All packages have been up-to-date.${reset}"
+        exit 0
+    fi
+else
+    # if no outdated packages found
+    if ( ! $3 ) ; then
         exit 0
     fi
 fi

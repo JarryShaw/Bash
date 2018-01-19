@@ -3,12 +3,23 @@
 
 ################################################################################
 # Log Python site packages updates.
+#
+# Parameter list:
+#   1. System Flag
+#   2. Cellar Flag
+#   3. CPython Flag
+#   4. Pypy Flag
+#   5. Version
+#       |-> 1 : Both
+#       |-> 2 : Python 2.*
+#       |-> 3 : Python 3.*
 ################################################################################
 
 
-# function usage:
+# pip logging function usage:
 #   piplogging 2/3 cpython/pypy system/cellar
 function piplogging {
+    # Python 2.* or Python 3.*
     if ( $1 ) ; then
         verl="2.7"
         vers=""
@@ -17,6 +28,7 @@ function piplogging {
         vers="3"
     fi
 
+    # CPython or Pypy
     if ( $2 ) ; then
         if ( $3 ) ; then
             pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
@@ -32,9 +44,11 @@ function piplogging {
         prtf="_pypy$vers"
     fi
 
-    $pref/pip$suff list --format="legacy" --not-required --outdate | sed 's/\(.*\)* (.*).*/\1/'
+    $pref/pip$suff list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"
 }
 
+
+# if system flag set
 if ( $1 ) ; then
     case "$5" in
         1)  piplogging true true true
@@ -44,7 +58,10 @@ if ( $1 ) ; then
     esac
 fi
 
+
+# if cellar flag set
 if ( $2 ) ; then
+    # if cpython flag set
     if ( $3 ) ; then
         case "$5" in
             1)  piplogging true true false
@@ -54,6 +71,7 @@ if ( $2 ) ; then
         esac
     fi
 
+    # if pypy flag set
     if ( $4 ) ; then
         case "$5" in
             1)  piplogging true false false
