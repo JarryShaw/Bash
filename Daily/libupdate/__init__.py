@@ -24,139 +24,192 @@ def _merge_packages(args):
     return package
 
 
-def update_pip(args):
+def update_apm(args, *, retset=False):
     quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
     package = _merge_packages(args)
+
+    if not quiet:
+        os.system('echo "-*- $({color})Atom$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
+
+    apm = subprocess.Popen(shlex.split('apm update --list --no-color'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    grep = subprocess.Popen(shlex.split('grep -e "*"'), stdin=apm.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sed = subprocess.Popen(shlex.split('sed "s/.* \(.*\)* .* -> .*/\1/"'), stdin=grep.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    apm.stdout.close()
+    grep.stdout.close()
+    output, error = sed.communicate()
+    if 'all' in package:
+        log = set(output.split())
+        outdated = 'true' if output else 'false'
+    else:
+        log = package
+        outdated = 'true'
+
+    for name in package:
+        subprocess.run(
+            ['bash', 'libupdate/update_apm.sh', name, quiet, verbose, outdated] + shlex.split(output)
+        )
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return log if retset else dict(appstore=log)
+
+
+def update_pip(args, *, retset=False):
+    quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
+    package = _merge_packages(args)
+
+    if not quiet:
+        os.system('echo "-*- $({color})Python$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
 
     if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
         system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
-        logging = subprocess.Popen(
-            ['bash', './logging_pip.sh', system, brew, cpython, pypy, version],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        logging = subprocess.run(
+            ['bash', 'libupdate/logging_pip.sh', system, brew, cpython, pypy, version],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
         )
-        output, error = logging.communicate()
-        log = dict(pip=set(output.decode().split()))
+        log = set(logging.stdout.split())
     else:
         system, brew, cpython, pypy, version = \
             str(args.system).lower(), str(args.brew).lower(), \
             str(args.cpython).lower(), str(args.pypy).lower(), str(args.version)
-        log = dict(pip=package)
+        log = package
 
-    for temppkg in package:
+    for name in package:
         subprocess.run(
-            ['bash', 'libupdate/update_pip.sh', system, brew, cpython, pypy, version, temppkg, quiet]
+            ['bash', 'libupdate/update_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose]
         )
 
-    return log
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return log if retset else dict(pip=log)
 
 
-def update_brew(args, *, cleanup=True):
+def update_brew(args, *, cleanup=True, retset=False):
     quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
     package = _merge_packages(args)
 
-    if quiet:
-        update = subprocess.Popen(
-            shlex.split('brew update {}'.format(quiet)),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, error = update.communicate()
-    else:
+    if not quiet:
         os.system('echo "-*- $({color})Homebrew$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
         ))
-        os.system('( set -x; brew update; )')
 
-    logging = subprocess.Popen(
-        shlex.split('brew outdated'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    subprocess.run(
+        ['bash', 'libupdate/logging_brew.sh', quiet, verbose]
     )
-    output, error = logging.communicate()
-    if 'all' in package:
-        log = dict(brew=set(output.decode().split()))
-    else:
-        log = dict(brew=package)
 
-    outdated = 'true' if output else 'false'
-    for temppkg in package:
-        subprocess.run(
-            ['bash', 'libupdate/update_brew.sh', temppkg, quiet, outdated] + shlex.split(output.decode())
-        )
-
-    if cleanup:
-        subprocess.run(
-            ['bash', 'libupdate/cleanup.sh']
-        )
-
-    return log
-
-
-def update_cask(args, *, cleanup=True):
-    quiet = '--quiet' if args.quiet else ''
-    package = _merge_packages(args)
-
-    if 'all' in package:
-        logging = subprocess.Popen(
-            shlex.split('brew cask outdated'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, error = logging.communicate()
-        log = dict(cask=set(output.decode().split()))
-    else:
-        log = dict(cask=package)
-
-    outdated = 'true' if output else 'false'
-    for temppkg in package:
-        subprocess.run(
-            ['bash', 'libupdate/update_cask.sh', temppkg, quiet, outdated]
-        )
-
-    if cleanup:
-        subprocess.run(
-            ['bash', 'libupdate/cleanup.sh']
-        )
-
-    return log
-
-
-def update_appstore(args):
-    quiet = '--quiet' if args.quiet else ''
-    package = _merge_packages(args)
-    outdated = 'false'
-
-    logging = subprocess.Popen(
-        shlex.split('softwareupdate --list'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    logging = subprocess.run(
+        shlex.split('brew outdated --quiet'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
     )
-    output, error = logging.communicate()
-    if 'all' not in package:
-        log = dict(appstore=package)
-    elif 'No new software available.' in output.decode():
-        log = dict(appstore=set())
+    if 'all' in package:
+        log = set(logging.stdout.split())
+        outdated = 'true' if logging.stdout else 'false'
     else:
-        log = dict(appstore=set(output.decode().replace(
-                'Software Update Tool\n\nFinding available software\n', ''
-            ).split()))
+        log = package
         outdated = 'true'
 
-    for temppkg in package:
+    for name in package:
         subprocess.run(
-            ['bash', 'libupdate/update_appstore.sh', temppkg, quiet, outdated]
+            ['bash', 'libupdate/update_brew.sh', name, quiet, verbose, outdated] + shlex.split(logging.stdout)
         )
 
-    return log
+    if cleanup:
+        subprocess.run(
+            ['bash', 'libupdate/cleanup.sh', 'true', 'false', quiet, verbose]
+        )
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return log if retset else dict(brew=log)
+
+
+def update_cask(args, *, cleanup=True, retset=False):
+    quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
+    package = _merge_packages(args)
+
+    if not quiet:
+        os.system('echo "-*- $({color})Caskroom$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
+
+    if 'all' in package:
+        logging = subprocess.run(
+            shlex.split('brew cask outdated --quiet'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
+        )
+        log = set(logging.stdout.split())
+        outdated = 'true' if logging.stdout else 'false'
+    else:
+        log = package
+        outdated = 'true'
+
+    for name in package:
+        subprocess.run(
+            ['bash', 'libupdate/update_cask.sh', name, quiet, verbose, outdated]
+        )
+
+    if cleanup:
+        subprocess.run(
+            ['bash', 'libupdate/cleanup.sh', 'false', 'true', quiet, verbose]
+        )
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return log if retset else dict(cask=log)
+
+
+def update_appstore(args, *, retset=False):
+    quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
+    package = _merge_packages(args)
+
+    if not quiet:
+        os.system('echo "-*- $({color})App Store$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
+
+    softwareupdate = subprocess.Popen(shlex.split('softwareupdate --list'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    grep = subprocess.Popen(shlex.split('grep -e "*"'), stdin=softwareupdate.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sed = subprocess.Popen(shlex.split('sed "s/.*\* \(.*\)*.*/\1/"'), stdin=grep.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    softwareupdate.stdout.close()
+    grep.stdout.close()
+    output, error = sed.communicate()
+    if 'all' in package:
+        log = set(output.split('\n'))
+        outdated = 'true' if output else 'false'
+    else:
+        log = package
+        outdated = 'true'
+
+    for name in package:
+        subprocess.run(
+            ['bash', 'libupdate/update_appstore.sh', name, quiet, verbose, outdated]
+        )
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return log if retset else dict(appstore=log)
 
 
 def update_all(args):
-    log = update_pip(args)
-    os.system('cls' if os.name == 'nt' else 'clear')
-    log.update(update_brew(args, cleanup=False))
-    os.system('cls' if os.name == 'nt' else 'clear')
-    log.update(update_cask(args, cleanup=False))
-    os.system('cls' if os.name == 'nt' else 'clear')
-    log.update(update_appstore(args))
+    quiet = '--quiet' if args.quiet else ''
+    verbose = '--verbose' if args.verbose else ''
+    os.system('sudo -H echo ;')
 
-    subprocess.run(
-        ['bash', 'libupdate/cleanup.sh']
+    log = dict(
+        # apm = update_apm(args, retset=True),
+        pip = update_pip(args, retset=True),
+        # brew = update_brew(args, cleanup=False, retset=True),
+        # cask = update_cask(args, cleanup=False, retset=True),
+        # appstore = update_appstore(args, retset=True),
     )
 
+    # subprocess.run(
+    #     ['bash', 'libupdate/cleanup.sh', 'true', 'true', quiet, verbose]
+    # )
+
+    os.system('cls' if os.name == 'nt' else 'clear')
     return log

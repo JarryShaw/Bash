@@ -11,7 +11,9 @@ import os
 __version__ = '0.3.0'
 
 
+# display mode names
 NAME = dict(
+    apm = 'Atom',
     pip = 'Python',
     brew = 'Homebrew',
     cask = 'Caskroom',
@@ -19,11 +21,22 @@ NAME = dict(
 )
 
 
+# mode actions
+MODE = dict(
+    all = lambda args: libupdate.update_all(args),
+    apm = lambda args: libupdate.update_apm(args),
+    pip = lambda args: libupdate.update_pip(args),
+    brew = lambda args: libupdate.update_brew(args),
+    cask = lambda args: libupdate.update_cask(args),
+    appstore = lambda args: libupdate.update_appstore(args),
+)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(prog='update', description=(
         'Automatic Package Update Manager'
     ))
-    parser.add_argument('-v', '--version', action='version',
+    parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(__version__))
     parser.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
@@ -37,14 +50,35 @@ def get_parser():
                             'or appstore.'
                         ))
 
+    parser_apm = subparser.add_parser('apm', description=(
+                            'Update installed Atom packages.'
+                        ))
+    parser_apm.add_argument('-a', '--all', action='store_true', default=True,
+                        dest='all', help=(
+                            'Update all packages installed through apm.'
+                        ))
+    parser_apm.add_argument('-p', '--package', metavar='PKG', action='append',
+                        dest='package', help=(
+                            'Name of packages to be updated, default is all.'
+                        ))
+    parser_apm.add_argument('-q', '--quiet', action='store_true', default=False,
+                        help=(
+                            'Run in quiet mode, with no output information.'
+                        ))
+    parser_apm.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
+    # parser_apm.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
+
     parser_pip = subparser.add_parser('pip', description=(
-                            'Update pip installed packages.'
+                            'Update installed Python packages.'
                         ))
     parser_pip.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
                             'Update all packages installed through pip.'
                         ))
-    parser_pip.add_argument('-v', '--version', action='store', metavar='VER',
+    parser_pip.add_argument('-V', '--version', action='store', metavar='VER',
                         dest='version', type=int, help=(
                             'Indicate which version of pip will be updated.'
                         ))
@@ -74,10 +108,14 @@ def get_parser():
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
+    parser_pip.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
     # parser_pip.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_brew = subparser.add_parser('brew', description=(
-                            'Update Homebrew installed packages.'
+                            'Update installed Homebrew packages.'
                         ))
     parser_brew.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
@@ -90,6 +128,10 @@ def get_parser():
     parser_brew.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
+                        ))
+    parser_brew.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
                         ))
     # parser_brew.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -108,10 +150,14 @@ def get_parser():
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
+    parser_cask.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
     # parser_cask.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     parser_appstore = subparser.add_parser('appstore', description=(
-                            'Update App Store installed packages.'
+                            'Update installed App Store packages.'
                         ))
     parser_appstore.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
@@ -131,6 +177,10 @@ def get_parser():
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
     # parser.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
     return parser
@@ -141,27 +191,22 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    if args.mode == 'pip':
-        log = libupdate.update_pip(args)
-    elif args.mode == 'brew':
-        log = libupdate.update_brew(args)
-    elif args.mode == 'cask':
-        log = libupdate.update_cask(args)
-    elif args.mode == 'appstore':
-        log = libupdate.update_appstore(args)
-    else:
-        log = libupdate.update_all(args)
+    log = MODE.get(args.mode or 'all')(args)
+    if not args.quiet:
+        os.system('echo "-*- $({color})Update Log$({reset}) -*-"; echo ;'.format(
+            color='tput setaf 14', reset='tput sgr0'
+        ))
 
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    for mode in log:
-        if log[mode]:
-            print('Updated packages in {}\n\t{}'.format(
-                NAME.get(mode, mode), ', '.join(log[mode])
-            ))
-        else:
-            print('No updates in {}'.format(NAME.get(mode, mode)))
+        for mode in log:
+            if log[mode] and all(log[mode]):
+                os.system('echo "Updated following {} packages: $({color}){}$({reset})."; echo ;'.format(
+                    NAME.get(mode, mode), ', '.join(log[mode]), color='tput setaf 1', reset='tput sgr0'
+                ))
+            else:
+                os.system(' echo "$({color})No package updated in {}.$({reset})"; echo ;'.format(
+                    NAME.get(mode, mode), color='tput setaf 2', reset='tput sgr0'
+                ))
 
 
 if __name__ == '__main__':
-    main()
+    __import__('sys').exit(main())

@@ -16,11 +16,24 @@
 ################################################################################
 
 
+# parameter assignment
+arg_s=$1
+arg_b=$2
+arg_c=$3
+arg_y=$4
+arg_V=$5
+
+
 # pip logging function usage:
 #   piplogging 2/3 cpython/pypy system/cellar
 function piplogging {
+    # parameter assignment
+    local arg_V=$1
+    local arg_c=$2
+    local arg_s=$3
+
     # Python 2.* or Python 3.*
-    if ( $1 ) ; then
+    if ( $arg_V ) ; then
         verl="2.7"
         vers=""
     else
@@ -29,8 +42,9 @@ function piplogging {
     fi
 
     # CPython or Pypy
-    if ( $2 ) ; then
-        if ( $3 ) ; then
+    if ( $arg_c ) ; then
+        # [CPython] System or Cellar
+        if ( $arg_s ) ; then
             pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
             prtf="_sys$vers"
         else
@@ -49,8 +63,8 @@ function piplogging {
 
 
 # if system flag set
-if ( $1 ) ; then
-    case "$5" in
+if ( $arg_s ) ; then
+    case $arg_V in
         1)  piplogging true true true
             piplogging false true true ;;
         2)  piplogging true true true ;;
@@ -60,10 +74,10 @@ fi
 
 
 # if cellar flag set
-if ( $2 ) ; then
+if ( $arg_b ) ; then
     # if cpython flag set
-    if ( $3 ) ; then
-        case "$5" in
+    if ( $arg_c ) ; then
+        case $arg_V in
             1)  piplogging true true false
                 piplogging false true false ;;
             2)  piplogging true true false ;;
@@ -72,8 +86,8 @@ if ( $2 ) ; then
     fi
 
     # if pypy flag set
-    if ( $4 ) ; then
-        case "$5" in
+    if ( $arg_y ) ; then
+        case $arg_V in
             1)  piplogging true false false
                 piplogging false false false ;;
             2)  piplogging true false false ;;

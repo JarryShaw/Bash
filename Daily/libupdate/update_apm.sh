@@ -1,38 +1,41 @@
 #!/bin/bash
 
 
-# Preset Terminal Output Colours
+# preset terminal output colours
 green=`tput setaf 2`    # green
 color=`tput setaf 14`   # blue
 reset=`tput sgr0`       # reset
 
 
 ################################################################################
-# Check software updates.
+# Check Atom updates.
 #
 # Parameter list:
 #   1. Package
 #   2. Quiet Flag
 #   3. Verbose Flag
 #   4. Outdated Flag
+#   5. Outdated Packages
+#       ............
 ################################################################################
 
 
-# Parameter Assignment
+# parameter assignment
 arg_pkg=$1
 arg_q=$2
 arg_v=$3
 arg_o=$4
+arg_opkg=${*:5}
 
 
 # if quiet flag not set
 if [[ -z $arg_q ]] ; then
-    # echo "-*- ${color}App Store${reset} -*-"
+    # echo "-*- ${color}Atom${reset} -*-"
     # echo ;
 
     # if no outdated packages found
     if ( ! $arg_o ) ; then
-        echo "${green}All applications have been up-to-date.${reset}"
+        echo "${green}All packages have been up-to-date.${reset}"
         exit 0
     fi
 
@@ -41,7 +44,7 @@ if [[ -z $arg_q ]] ; then
 else
     # if no outdated packages found
     if ( ! $arg_o ) ; then
-        exit 0
+        exit 0;
     fi
 
     quiet=":"
@@ -52,12 +55,15 @@ fi
 # All or Specified Packages
 case $arg_pkg in
     "all")
-        ( $quiet; sudo -H softwareupdate --no-scan --install --all $arg_v $regex; )
-        if [[ -z $arg_q ]] ; then
-            echo ;
-        fi ;;
+        # parameters since fourth are outdated packages
+        for pkg in $arg_opkg ; do
+            ( $quiet; apm upgrade $pkg $arg_v $arg_q $regex; )
+            if [[ -z $arg_q ]] ; then
+                echo ;
+            fi
+        done ;;
     *)
-        ( $quiet; sudo -H softwareupdate --install $arg_pkg $arg_v $regex; )
+        ( $quiet; apm upgrade $arg_pkg $arg_v $arg_q $regex; )
         if [[ -z $arg_q ]] ; then
             echo ;
         fi ;;
