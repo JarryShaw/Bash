@@ -15,6 +15,7 @@ reset=`tput sgr0`       # reset
 #   2. Caskroom Flag
 #   3. Quiet Flag
 #   4. Verbose Flag
+#   5. Log Date
 ################################################################################
 
 
@@ -23,48 +24,82 @@ arg_brew=$1
 arg_cask=$2
 arg_q=$3
 arg_v=$4
+logdate=$5
 
 
-# if quiet flag not set
-if [[ -z $arg_q ]] ; then
-    echo "-*- ${color}Cleanup${reset} -*-"
-    echo ;
-    quiet="set -x"
-    regex=""
+# log file prepare
+# logdate=`date "+%y%m%d"`
+echo "" >> log/update/$logdate.log
+echo "+ /bin/bash $0 $@" >> log/update/$logdate.log
+logprefix="script -q /dev/null"
+if ( $arg_q ) ; then
+    logsuffix=">> /tmp/update.log"
 else
-    quiet=":"
-    regex=" | grep -v \"\""
+    logsuffix=" | tee -a /tmp/update.log"
+fi
+logcatsed='grep "[[0-9][0-9]*m" /tmp/update.log | sed "s/^/ERR: /" | sed "s/\[[0-9][0-9]*m//g" >> log/update/$logdate.log'
+
+
+
+# if quiet flag set
+if ( $arg_q ) ; then
+    quiet="--quiet"
+    cmd_q="-q"
+else
+    quiet=""
 fi
 
 
 # if verbose flag not set
-if [[ -z $arg_v ]] ; then
-    verbose=''
+if ( $arg_v ) ; then
+    verbose="--verbose"
+    cmd_v="-v"
 else
-    verbose='-v'
+    verbose=""
 fi
 
 
 # brew prune
-( $quiet; brew prune $arg_v $regex; )
-echo ;
+if ( ! $arg_q ) ; then
+    echo "+ brew prune $verbose $quiet"
+fi
+eval $logprefix brew prune $verbose $quiet $logsuffix
+eval $logcatsed
+if ( ! $arg_q ) ; then
+    echo ;
+fi
 
 
 # archive caches if hard disk attached
 if [ -e /Volumes/Jarry\ Shaw/ ] ; then
-    if [[ -z $arg_q ]] ; then
-        echo "+ cp -rf cache archive $arg_v"
-        cp -rf $verbose $(brew --cache) /Volumes/Jarry\ Shaw/Developers/;
-        echo ;
+    if ( ! $arg_q ) ; then
+        echo "+ cp -rf cache archive $verbose $quiet"
     fi
-
-    if ( $arg_brew ) ; then
-        ( $quiet; brew cleanup $arg_v $regex; )
+    eval $logprefix cp -rf $cmd_v $(brew --cache) /Volumes/Jarry\ Shaw/Developers/ $logsuffix
+    eval $logcatsed
+    if ( ! $arg_q ) ; then
         echo ;
     fi
 
     if ( $arg_cask ) ; then
-        ( $quiet; brew cask cleanup $arg_v $regex; )
-        echo ;
+        if ( ! $arg_q ) ; then
+            echo "+ brew cask cleanup $verbose $quiet"
+        fi
+        eval $logprefix brew cask cleanup $verbose $logsuffix
+        eval $logcatsed
+        if ( ! $arg_q ) ; then
+            echo ;
+        fi
+    fi
+
+    if ( $arg_brew ) ; then
+        if ( ! $arg_q ) ; then
+            echo "+ brew cleanup $verbose $quiet"
+        fi
+        eval $logprefix rm -rf $cmd_v $( brew --cache ) $logsuffix
+        eval $logcatsed
+        if ( ! $arg_q ) ; then
+            echo ;
+        fi
     fi
 fi

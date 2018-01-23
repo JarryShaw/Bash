@@ -13,6 +13,7 @@
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
+#   6. Log Date
 ################################################################################
 
 
@@ -22,6 +23,13 @@ arg_b=$2
 arg_c=$3
 arg_y=$4
 arg_V=$5
+logdate=$6
+
+
+# log file prepare
+# logdate=`date "+%y%m%d"`
+echo "+ /bin/bash $0 $@" >> log/update/$logdate.log
+log="2>> log/update/$logdate.log"
 
 
 # pip logging function usage:
@@ -31,6 +39,9 @@ function piplogging {
     local arg_V=$1
     local arg_c=$2
     local arg_s=$3
+
+    # log function call
+    echo "++ pipupdate $@" >> log/update/$logdate.log
 
     # Python 2.* or Python 3.*
     if ( $arg_V ) ; then
@@ -58,7 +69,7 @@ function piplogging {
         prtf="_pypy$vers"
     fi
 
-    $pref/pip$suff list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"
+    eval $pref/pip$suff list --format legacy --not-required --outdate $log | sed "s/\(.*\)* (.*).*/\1/"
 }
 
 

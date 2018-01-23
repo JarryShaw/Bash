@@ -3,8 +3,11 @@
 
 
 import argparse
+import datetime
 import libupdate
 import os
+import pathlib
+import sys
 
 
 # version string
@@ -23,12 +26,12 @@ NAME = dict(
 
 # mode actions
 MODE = dict(
-    all = lambda args: libupdate.update_all(args),
-    apm = lambda args: libupdate.update_apm(args),
-    pip = lambda args: libupdate.update_pip(args),
-    brew = lambda args: libupdate.update_brew(args),
-    cask = lambda args: libupdate.update_cask(args),
-    appstore = lambda args: libupdate.update_appstore(args),
+    all = lambda *args, **kwargs: libupdate.update_all(*args, **kwargs),
+    apm = lambda *args, **kwargs: libupdate.update_apm(*args, **kwargs),
+    pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
+    brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
+    cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
+    appstore = lambda *args, **kwargs: libupdate.update_appstore(*args, **kwargs),
 )
 
 
@@ -191,7 +194,17 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    log = MODE.get(args.mode or 'all')(args)
+    logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
+    pathlib.Path('log/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
+
+    with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
+        logfile.write(datetime.date.strftime(datetime.datetime.today(), '%+').center(80, '—'))
+        logfile.write('\n\nCMD: {python} {program}'.format(python=sys.prefix, program=' '.join(sys.argv)))
+        logfile.write('\n\n-*- Arguments -*-\n\n')
+        for key, value in args.__dict__.items():
+            logfile.write('{key} = {value}\n'.format(key=key, value=value))
+
+    log = MODE.get(args.mode or 'all')(args, file=logfile, date=logdate)
     if not args.quiet:
         os.system('echo "-*- $({color})Update Log$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
@@ -203,10 +216,19 @@ def main():
                     NAME.get(mode, mode), ', '.join(log[mode]), color='tput setaf 1', reset='tput sgr0'
                 ))
             else:
-                os.system(' echo "$({color})No package updated in {}.$({reset})"; echo ;'.format(
+                os.system('echo "$({color})No package updated in {}.$({reset})"; echo ;'.format(
                     NAME.get(mode, mode), color='tput setaf 2', reset='tput sgr0'
                 ))
 
+    with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
+        logfile.write('\n\n-*- Logs -*-\n\n')
+        for mode in log:
+            if log[mode] and all(log[mode]):
+                logfile.write("Updated following {} packages: {}.\n".format(NAME.get(mode, mode), ', '.join(log[mode])))
+            else:
+                logfile.write("No package updated in {}.\n".format(NAME.get(mode, mode)))
+        logfile.write('\n\n')
+
 
 if __name__ == '__main__':
-    __import__('sys').exit(main())
+    sys.exit(main())
