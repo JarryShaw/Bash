@@ -1,6 +1,10 @@
 #!/bin/bash
 
 
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
+
+
 # preset terminal output colours
 green=`tput setaf 2`    # green
 color=`tput setaf 14`   # blue
@@ -28,17 +32,33 @@ logdate=$5
 
 
 # log file prepare
-# logdate=`date "+%y%m%d"`
-echo "" >> log/update/$logdate.log
-echo "+ /bin/bash $0 $@" >> log/update/$logdate.log
+logfile="log/update/$logdate.log"
+tmpfile="/tmp/update.log"
+
+
+# remove /temp/update.log
+rm -f $tmpfile
+
+
+# create /temp/update.log & log/update/logdate.log
+touch $logfile
+touch $tmpfile
+
+
+# log current status
+echo "" >> $tmpfile
+echo "- /bin/bash $0 $@" >> $tmpfile
+
+
+# log commands
 logprefix="script -q /dev/null"
 if ( $arg_q ) ; then
-    logsuffix=">> /tmp/update.log"
+    logsuffix=">> $tmpfile"
+    seperator=""
 else
-    logsuffix=" | tee -a /tmp/update.log"
+    logsuffix="tee -a \"$tmpfile\""
+    seperator="|"
 fi
-logcatsed='grep "[[0-9][0-9]*m" /tmp/update.log | sed "s/^/ERR: /" | sed "s/\[[0-9][0-9]*m//g" >> log/update/$logdate.log'
-
 
 
 # if quiet flag set
@@ -47,6 +67,7 @@ if ( $arg_q ) ; then
     cmd_q="-q"
 else
     quiet=""
+    cmd_q=""
 fi
 
 
@@ -56,50 +77,74 @@ if ( $arg_v ) ; then
     cmd_v="-v"
 else
     verbose=""
+    cmd_v=""
 fi
 
 
 # brew prune
-if ( ! $arg_q ) ; then
-    echo "+ brew prune $verbose $quiet"
-fi
-eval $logprefix brew prune $verbose $quiet $logsuffix
-eval $logcatsed
-if ( ! $arg_q ) ; then
-    echo ;
-fi
+eval $logprefix echo -e "+ brew prune $verbose $quiet" $seperator $logsuffix
+eval $logprefix brew prune $verbose $quiet $seperator $logsuffix
+eval $logprefix echo $seperator $logsuffix
 
 
 # archive caches if hard disk attached
 if [ -e /Volumes/Jarry\ Shaw/ ] ; then
-    if ( ! $arg_q ) ; then
-        echo "+ cp -rf cache archive $verbose $quiet"
-    fi
-    eval $logprefix cp -rf $cmd_v $(brew --cache) /Volumes/Jarry\ Shaw/Developers/ $logsuffix
-    eval $logcatsed
-    if ( ! $arg_q ) ; then
-        echo ;
-    fi
+    # move caches
+    eval $logprefix echo -e "+ cp -rf cache archive $verbose $quiet" $seperator $logsuffix
+    eval $logprefix cp -rf $cmd_v $(brew --cache) /Volumes/Jarry\ Shaw/Developers/ $seperator $logsuffix
+    eval $logprefix echo $seperator $logsuffix
 
+    # if cask flag set
     if ( $arg_cask ) ; then
-        if ( ! $arg_q ) ; then
-            echo "+ brew cask cleanup $verbose $quiet"
-        fi
-        eval $logprefix brew cask cleanup $verbose $logsuffix
-        eval $logcatsed
-        if ( ! $arg_q ) ; then
-            echo ;
-        fi
+        eval $logprefix echo -e "+ brew cask cleanup $verbose $quiet" $seperator $logsuffix
+        eval $logprefix brew cask cleanup $verbose $seperator $logsuffix
+        eval $logprefix echo $seperator $logsuffix
     fi
 
+    # if brew flag set
     if ( $arg_brew ) ; then
-        if ( ! $arg_q ) ; then
-            echo "+ brew cleanup $verbose $quiet"
-        fi
-        eval $logprefix rm -rf $cmd_v $( brew --cache ) $logsuffix
-        eval $logcatsed
-        if ( ! $arg_q ) ; then
-            echo ;
-        fi
+        eval $seperator $logsuffix echo -e "+ brew cleanup $verbose $quiet" $seperator $logsuffix
+        eval $logprefix rm -rf $cmd_v $( brew --cache ) $seperator $logsuffix
+        eval $logprefix echo $seperator $logsuffix
     fi
 fi
+
+
+# read /temp/update.log line by line then migrate to log file
+while read -r line ; do
+    # plus `+` proceeds in line
+    if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
+        echo "+$line" >> $logfile
+    # minus `-` proceeds in line
+    elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
+        echo "$line" | sed "y/-/+/" >> $logfile
+    # colon `:` in line
+    elif [[ $line =~ ^([:alnum:][:alnum:]*)(:)(.*)$ ]] ; then
+        # log tag
+        prefix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/\(.*\)*:\ .*/\1/" | cut -c 1-3 | tr "[a-z]" "[A-Z]"`
+        # log content
+        suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
+        # write to log/update/logdate.log
+        echo "$prefix: $suffix" >> $logfile
+    # colourised `[??m` line
+    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
+        # add `ERR` tag and remove special characters then write to log/update/logdate.log
+        echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+    # non-empty line
+    elif [[ -nz $line ]] ; then
+        # add `INF` tag, remove special characters and discard flushed lines then write to log/update/logdate.log
+        echo $line | sed "s/^/INF: /" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" >> $logfile
+    # empty line
+    else
+        # directly write to log/update/logdate.log
+        echo $line >> $logfile
+    fi
+done < $tmpfile
+
+
+# remove /temp/update.log
+rm -f $tmpfile
+
+
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null

@@ -6,15 +6,19 @@ sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
 
 
 ################################################################################
-# Log App Store packages updates.
+# Update global Homebrew status.
 #
-# Parameter List
-#   1. Log Date
+# Parameter list:
+#   1. Quiet Flag
+#   2. Verbose Flag
+#   3. Log Date
 ################################################################################
 
 
 # parameter assignment
-logdate=$1
+arg_q=$1
+arg_v=$2
+logdate=$3
 
 
 # log file prepare
@@ -38,14 +42,27 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 # log commands
 logprefix="script -q /dev/null"
-logsuffix="tee -a \"$tmpfile\""
-seperator="|"
+if ( $arg_q ) ; then
+    logsuffix=">> $tmpfile"
+    seperator=""
+else
+    logsuffix="tee -a \"$tmpfile\""
+    seperator="|"
+fi
 
 
-# check for oudated packages
-echo -e "+ softwareupdate --list | grep -e \"*\" | sed \"s/.*\* \(.*\)*.*/\1/\"" >> $tmpfile
-eval $logprefix softwareupdate --list | grep -e "*" | sed "s/.*\* \(.*\)*.*/\1/" $seperator $logsuffix
-echo >> $tmpfile
+# if verbose flag set
+if ( $arg_v ) ; then
+    verbose="--verbose"
+else
+    verbose=""
+fi
+
+
+# renew brew status
+eval $logprefix echo -e "+ brew update --force $verbose" $seperator $logsuffix
+eval $logprefix brew update --force $verbose $seperator $logsuffix
+eval $logprefix echo $seperator $logsuffix
 
 
 # read /temp/update.log line by line then migrate to log file

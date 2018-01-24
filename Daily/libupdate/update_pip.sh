@@ -1,6 +1,10 @@
 #!/bin/bash
 
 
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
+
+
 # preset terminal output colours
 blush=`tput setaf 1`    # blush / red
 green=`tput setaf 2`    # green
@@ -39,95 +43,100 @@ logdate=$9
 
 
 # log file prepare
-# logdate=`date "+%y%m%d"`
-echo "" >> log/update/$logdate.log
-echo "+ /bin/bash $0 $@" >> log/update/$logdate.log
+logfile="log/update/$logdate.log"
+tmpfile="/tmp/update.log"
+
+
+# remove /temp/update.log
+rm -f $tmpfile
+
+
+# create /temp/update.log & log/update/logdate.log
+touch $logfile
+touch $tmpfile
+
+
+# log current status
+echo "" >> $tmpfile
+echo "- /bin/bash $0 $@" >> $tmpfile
+
+
+# log commands
 logprefix="script -q /dev/null"
 if ( $arg_q ) ; then
-    logsuffix=">> /tmp/update.log"
+    logsuffix=">> $tmpfile"
+    seperator=""
 else
-    logsuffix=" | tee -a /tmp/update.log"
+    logsuffix="tee -a \"$tmpfile\""
+    seperator="|"
 fi
-logcatsed='grep "[[0-9][0-9]*m" /tmp/update.log | sed "s/^/ERR: /" | sed "s/\[[0-9][0-9]*m//g" >> log/update/$logdate.log'
 
 
 # pip update function usage:
-#   pipupdate 2/3 cpython/pypy system/cellar
+#   pipupdate mode
 function pipupdate {
     # parameter assignment
-    local arg_V=$1
-    local arg_c=$2
-    local arg_s=$3
+    mode=$1
 
     # log function call
-    echo "++ pipupdate $@" >> log/update/$logdate.log
+    echo "+ pipupdate $@" >> $logfile
 
-    # Python 2.* or Python 3.*
-    if ( $arg_V ) ; then
-        verl="2.7"
-        vers=""
-    else
-        verl="3.6"
-        vers="3"
-    fi
-
-    # CPython or Pypy
-    if ( $arg_c ) ; then
-        # [CPython] System or Cellar
-        if ( $arg_s ) ; then
-            pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
-            prtf="_sys$vers"
-        else
-            pref="/usr/local/opt/python$vers/bin"
-            prtf="$vers"
-        fi
-        suff="$vers"
-    else
-        pref="/usr/local/opt/pypy$vers/bin"
-        suff="_pypy$vers"
-        prtf="_pypy$vers"
-    fi
+    # make prefix & suffix of pip
+    case $mode in
+        1)  # pip_sys
+            prefix="/Library/Frameworks/Python.framework/Versions/2.7/bin"
+            suffix=""
+            pprint="_sys" ;;
+        2)  # pip_sys3
+            prefix="/Library/Frameworks/Python.framework/Versions/3.6/bin"
+            suffix="3"
+            pprint="_sys3" ;;
+        3)  # pip
+            prefix="/usr/local/opt/python/bin"
+            suffix=""
+            pprint="" ;;
+        4)  # pip
+            prefix="/usr/local/opt/python3/bin"
+            suffix="3"
+            pprint="3" ;;
+        5)  # pip_pypy
+            prefix="/usr/local/opt/pypy/bin"
+            suffix="_pypy"
+            pprint="_pypy" ;;
+        6)  # pip_pypy
+            prefix="/usr/local/opt/pypy3/bin"
+            suffix="_pypy3"
+            pprint="_pypy3" ;;
+    esac
 
     # All or Specified Packages
     case $arg_pkg in
         "all")
-            # list=`pipdeptree$prtf | grep -e "==" | grep -v "required"`
-            list=`$pref/pip$suff list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
+            # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
+            list=`$prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
             if [[ -nz $list ]] ; then
                 for name in $list ; do
-                    if ( ! $arg_q ); then
-                        echo "+ pip$prtf install --upgrade --no-cache-dir $name $verbose $quiet"
-                    fi
-                    eval $logprefix $pref/pip$suff install --upgrade --no-cache-dir $name $verbose $quiet $logsuffix
-                    eval $logcatsed
-                    if ( ! $arg_q ); then
-                        echo ;
-                    fi
+                    eval $logprefix echo -e "++ pip$pprint install --upgrade --no-cache-dir $name $verbose $quiet" $seperator $logsuffix
+                    eval $logprefix $prefix/pip$suffix install --upgrade --no-cache-dir $name $verbose $quiet $seperator $logsuffix
+                    eval $logprefix echo $seperator $logsuffix
                 done
             else
-                if ( ! $arg_q ); then
-                    echo "${green}All pip$prtf packages have been up-to-date.${reset}"
-                    echo ;
-                fi
+                eval $logprefix echo "${green}All pip$pprint packages have been up-to-date.${reset}" $seperator $logsuffix
+                eval $logprefix echo $seperator $logsuffix
             fi ;;
         *)
-            flag=`$pref/pip$suff list --format legacy | awk "/^$arg_pkg$/"`
+            flag=`$prefix/pip$suffix list --format legacy | awk "/^$arg_pkg$/"`
             if [[ -nz $flag ]]; then
-                if ( ! $arg_q ) ; then
-                    echo -e "+ pip$prtf install --upgrade --no-cache-dir $arg_pkg $verbose $quiet"
-                fi
-                eval $logprefix $pref/pip$suff install --upgrade --no-cache-dir $arg_pkg $verbose $quiet $logsuffix
-                eval $logcatsed
-                if ( ! $arg_q ) ; then
-                    echo ;
-                fi
+                eval $logprefix echo -e "++ pip$pprint install --upgrade --no-cache-dir $arg_pkg $verbose $quiet" $seperator $logsuffix
+                eval $logprefix $prefix/pip$suffix install --upgrade --no-cache-dir $arg_pkg $verbose $quiet $seperator $logsuffix
+                eval $logprefix echo $seperator $logsuffix
             else
-                echo -e "${blush}No pip$prtf package names $arg_pkg installed.${reset}"
+                eval $logprefix echo "${blush}No pip$pprint package names $arg_pkg installed.${reset}" $seperator $logsuffix
 
                 # did you mean
                 dym=`pip list --format legacy | grep $arg_pkg | xargs | sed "s/ /, /g"`
                 if [[ -nz $dym ]] ; then
-                    echo "Did you mean any of the following packages: $dym?"
+                    eval $logprefix echo "Did you mean any of the following packages: $dym?" $seperator $logsuffix
                 fi
             fi ;;
     esac
@@ -150,36 +159,111 @@ else
 fi
 
 
+# preset all mode bools
+mode_pip_sys=false      # 2.* / system / cpython
+mode_pip_sys3=false     # 3.* / system / cpython
+mode_pip=false          # 2.* / cellar / cpython
+mode_pip3=false         # 3.* / cellar / cpython
+mode_pip_pypy=false     # 2.* / cellar / pypy
+mode_pip_pypy3=false    # 3.* / cellar / pypy
+
+
 # if system flag set
 if ( $arg_s ) ; then
     case $arg_V in
-        1)  pipupdate true true true
-            pipupdate false true true ;;
-        2)  pipupdate true true true ;;
-        3)  pipupdate false true true ;;
+        1)  mode_pip_sys=true
+            mode_pip_sys3=true ;;
+        2)  mode_pip_sys=true ;;
+        3)  mode_pip_sys3=true ;;
     esac
 fi
 
 
 # if cellar flag set
 if ( $arg_b ) ; then
-    # if cpython flag set
-    if ( $arg_c ) ; then
-        case $arg_V in
-            1)  pipupdate true true false
-                pipupdate false true false ;;
-            2)  pipupdate true true false ;;
-            3)  pipupdate false true false ;;
-        esac
-    fi
-
-    # if pypy flag set
-    if ( $arg_y ) ; then
-        case $arg_V in
-            1)  pipupdate true false false
-                pipupdate false false false ;;
-            2)  pipupdate true false false ;;
-            3)  pipupdate false false false ;;
-        esac
-    fi
+    case $arg_V in
+        1)  mode_pip=true
+            mode_pip3=true
+            mode_pip_pypy=true
+            mode_pip_pypy3=true ;;
+        2)  mode_pip=true
+            mode_pip_pypy=true ;;
+        3)  mode_pip3=true
+            mode_pip_pypy3=true ;;
+    esac
 fi
+
+
+# if cpython flag set
+if ( $arg_c ) ; then
+    case $arg_V in
+        1)  mode_pip_sys=true
+            mode_pip_sys3=true
+            mode_pip=true
+            mode_pip3=true ;;
+        2)  mode_pip_sys=true
+            mode_pip=true ;;
+        3)  mode_pip_sys3=true
+            mode_pip3=true ;;
+    esac
+fi
+
+
+# if pypy flag set
+if ( $arg_y ) ; then
+    case $arg_V in
+        1)  mode_pip_pypy=true
+            mode_pip_pypy3=true ;;
+        2)  mode_pip_pypy=true ;;
+        3)  mode_pip_pypy3=true ;;
+    esac
+fi
+
+
+# call piplogging function according to modes
+list=( [1]=$mode_pip_sys $mode_pip_sys3 $mode_pip $mode_pip3 $mode_pip_pypy $mode_pip_pypy3 )
+for index in ${!list[*]} ; do
+    if ( ${list[$index]} ) ; then
+        pipupdate $index
+    fi
+done
+
+
+# read /temp/update.log line by line then migrate to log file
+while read -r line ; do
+    # plus `+` proceeds in line
+    if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
+        echo "+$line" >> $logfile
+    # minus `-` proceeds in line
+    elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
+        echo "$line" | sed "y/-/+/" >> $logfile
+    # colon `:` in line
+    elif [[ $line =~ ^([:alnum:][:alnum:]*)(:)(.*)$ ]] ; then
+        # log tag
+        prefix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/\(.*\)*:\ .*/\1/" | cut -c 1-3 | tr "[a-z]" "[A-Z]"`
+        # log content
+        suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
+        # write to log/update/logdate.log
+        echo "$prefix: $suffix" >> $logfile
+    # colourised `[??m` line
+    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
+        # add `ERR` tag and remove special characters then write to log/update/logdate.log
+        echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+    # non-empty line
+    elif [[ -nz $line ]] ; then
+        # add `INF` tag, remove special characters and discard flushed lines then write to log/update/logdate.log
+        echo $line | sed "s/^/INF: /" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" >> $logfile
+    # empty line
+    else
+        # directly write to log/update/logdate.log
+        echo $line >> $logfile
+    fi
+done < $tmpfile
+
+
+# remove /temp/update.log
+rm -f $tmpfile
+
+
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null

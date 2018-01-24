@@ -1,6 +1,10 @@
 #!/bin/bash
 
 
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
+
+
 ################################################################################
 # Log Python site packages updates.
 #
@@ -27,82 +31,180 @@ logdate=$6
 
 
 # log file prepare
-# logdate=`date "+%y%m%d"`
-echo "+ /bin/bash $0 $@" >> log/update/$logdate.log
-log="2>> log/update/$logdate.log"
+logfile="$logdate.log"
+tmpfile="/tmp/update.log"
+
+
+# remove /temp/update.log
+rm -f $tmpfile
+
+
+# create /temp/update.log & log/update/logdate.log
+touch $logfile
+touch $tmpfile
+
+
+# log current status
+echo "" >> $tmpfile
+echo "- /bin/bash $0 $@" >> $tmpfile
+
+
+# log commands
+logprefix="script -q /dev/null"
+logsuffix="tee -a \"$tmpfile\""
+seperator="|"
 
 
 # pip logging function usage:
-#   piplogging 2/3 cpython/pypy system/cellar
+#   piplogging mode
 function piplogging {
     # parameter assignment
-    local arg_V=$1
-    local arg_c=$2
-    local arg_s=$3
+    mode=$1
 
     # log function call
-    echo "++ pipupdate $@" >> log/update/$logdate.log
+    echo "+ piplogging $@" >> $tmpfile
 
-    # Python 2.* or Python 3.*
-    if ( $arg_V ) ; then
-        verl="2.7"
-        vers=""
-    else
-        verl="3.6"
-        vers="3"
-    fi
 
-    # CPython or Pypy
-    if ( $arg_c ) ; then
-        # [CPython] System or Cellar
-        if ( $arg_s ) ; then
-            pref="/Library/Frameworks/Python.framework/Versions/$verl/bin"
-            prtf="_sys$vers"
-        else
-            pref="/usr/local/opt/python$vers/bin"
-            prtf="$vers"
-        fi
-        suff="$vers"
-    else
-        pref="/usr/local/opt/pypy$vers/bin"
-        suff="_pypy$vers"
-        prtf="_pypy$vers"
-    fi
+    # make prefix & suffix of pip
+    case $mode in
+        1)  # pip_sys
+            prefix="/Library/Frameworks/Python.framework/Versions/2.7/bin"
+            suffix=""
+            pprint="_sys" ;;
+        2)  # pip_sys3
+            prefix="/Library/Frameworks/Python.framework/Versions/3.6/bin"
+            suffix="3"
+            pprint="_sys3" ;;
+        3)  # pip
+            prefix="/usr/local/opt/python/bin"
+            suffix=""
+            pprint="" ;;
+        4)  # pip
+            prefix="/usr/local/opt/python3/bin"
+            suffix="3"
+            pprint="3" ;;
+        5)  # pip_pypy
+            prefix="/usr/local/opt/pypy/bin"
+            suffix="_pypy"
+            pprint="_pypy" ;;
+        6)  # pip_pypy
+            prefix="/usr/local/opt/pypy3/bin"
+            suffix="_pypy3"
+            pprint="_pypy3" ;;
+    esac
 
-    eval $pref/pip$suff list --format legacy --not-required --outdate $log | sed "s/\(.*\)* (.*).*/\1/"
+    # check for outdated packages
+    echo -e "++ pip$pprint list --format legacy --not-required --outdate | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
+    eval $logprefix $prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/" $seperator $logsuffix
+    echo >> $tmpfile
 }
+
+
+# preset all mode bools
+mode_pip_sys=false      # 2.* / system / cpython
+mode_pip_sys3=false     # 3.* / system / cpython
+mode_pip=false          # 2.* / cellar / cpython
+mode_pip3=false         # 3.* / cellar / cpython
+mode_pip_pypy=false     # 2.* / cellar / pypy
+mode_pip_pypy3=false    # 3.* / cellar / pypy
 
 
 # if system flag set
 if ( $arg_s ) ; then
     case $arg_V in
-        1)  piplogging true true true
-            piplogging false true true ;;
-        2)  piplogging true true true ;;
-        3)  piplogging false true true ;;
+        1)  mode_pip_sys=true
+            mode_pip_sys3=true ;;
+        2)  mode_pip_sys=true ;;
+        3)  mode_pip_sys3=true ;;
     esac
 fi
 
 
 # if cellar flag set
 if ( $arg_b ) ; then
-    # if cpython flag set
-    if ( $arg_c ) ; then
-        case $arg_V in
-            1)  piplogging true true false
-                piplogging false true false ;;
-            2)  piplogging true true false ;;
-            3)  piplogging false true false ;;
-        esac
-    fi
-
-    # if pypy flag set
-    if ( $arg_y ) ; then
-        case $arg_V in
-            1)  piplogging true false false
-                piplogging false false false ;;
-            2)  piplogging true false false ;;
-            3)  piplogging false false false ;;
-        esac
-    fi
+    case $arg_V in
+        1)  mode_pip=true
+            mode_pip3=true
+            mode_pip_pypy=true
+            mode_pip_pypy3=true ;;
+        2)  mode_pip=true
+            mode_pip_pypy=true ;;
+        3)  mode_pip3=true
+            mode_pip_pypy3=true ;;
+    esac
 fi
+
+
+# if cpython flag set
+if ( $arg_c ) ; then
+    case $arg_V in
+        1)  mode_pip_sys=true
+            mode_pip_sys3=true
+            mode_pip=true
+            mode_pip3=true ;;
+        2)  mode_pip_sys=true
+            mode_pip=true ;;
+        3)  mode_pip_sys3=true
+            mode_pip3=true ;;
+    esac
+fi
+
+
+# if pypy flag set
+if ( $arg_y ) ; then
+    case $arg_V in
+        1)  mode_pip_pypy=true
+            mode_pip_pypy3=true ;;
+        2)  mode_pip_pypy=true ;;
+        3)  mode_pip_pypy3=true ;;
+    esac
+fi
+
+
+# call piplogging function according to modes
+list=( [1]=$mode_pip_sys $mode_pip_sys3 $mode_pip $mode_pip3 $mode_pip_pypy $mode_pip_pypy3 )
+for index in ${!list[*]} ; do
+    if ( ${list[$index]} ) ; then
+        piplogging $index
+    fi
+done
+
+
+# read /temp/update.log line by line then migrate to log file
+while read -r line ; do
+    # plus `+` proceeds in line
+    if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
+        echo "+$line" >> $logfile
+    # minus `-` proceeds in line
+    elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
+        echo "$line" | sed "y/-/+/" >> $logfile
+    # colon `:` in line
+    elif [[ $line =~ ^([:alnum:][:alnum:]*)(:)(.*)$ ]] ; then
+        # log tag
+        prefix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/\(.*\)*:\ .*/\1/" | cut -c 1-3 | tr "[a-z]" "[A-Z]"`
+        # log content
+        suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
+        # write to log/update/logdate.log
+        echo "$prefix: $suffix" >> $logfile
+    # colourised `[??m` line
+    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
+        # add `ERR` tag and remove special characters then write to log/update/logdate.log
+        echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+    # non-empty line
+    elif [[ -nz $line ]] ; then
+        # add `INF` tag, remove special characters and discard flushed lines then write to log/update/logdate.log
+        echo $line | sed "s/^/INF: /" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" >> $logfile
+    # empty line
+    else
+        # directly write to log/update/logdate.log
+        echo $line >> $logfile
+    fi
+done < $tmpfile
+
+
+# remove /temp/update.log
+# rm -f $tmpfile
+
+
+# clear potential ternminal buffer
+sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null

@@ -41,7 +41,7 @@ def get_parser():
     ))
     parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(__version__))
-    parser.add_argument('-a', '--all', action='store_true', default=True,
+    parser.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
                             'Update all packages installed through pip, '
                             'Homebrew, and App Store.'
@@ -56,7 +56,7 @@ def get_parser():
     parser_apm = subparser.add_parser('apm', description=(
                             'Update installed Atom packages.'
                         ))
-    parser_apm.add_argument('-a', '--all', action='store_true', default=True,
+    parser_apm.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
                             'Update all packages installed through apm.'
                         ))
@@ -120,7 +120,7 @@ def get_parser():
     parser_brew = subparser.add_parser('brew', description=(
                             'Update installed Homebrew packages.'
                         ))
-    parser_brew.add_argument('-a', '--all', action='store_true', default=True,
+    parser_brew.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
                             'Update all packages installed through Homebrew.'
                         ))
@@ -141,7 +141,7 @@ def get_parser():
     parser_cask = subparser.add_parser('cask', description=(
                             'Update installed Caskroom packages.'
                         ))
-    parser_cask.add_argument('-a', '--all', action='store_true', default=True,
+    parser_cask.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
                             'Update all packages installed through Caskroom.'
                         ))
@@ -162,7 +162,7 @@ def get_parser():
     parser_appstore = subparser.add_parser('appstore', description=(
                             'Update installed App Store packages.'
                         ))
-    parser_appstore.add_argument('-a', '--all', action='store_true', default=True,
+    parser_appstore.add_argument('-a', '--all', action='store_true', default=False,
                         dest='all', help=(
                             'Update all packages installed through App Store.'
                         ))
@@ -200,13 +200,13 @@ def main():
     with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
         logfile.write(datetime.date.strftime(datetime.datetime.today(), '%+').center(80, '—'))
         logfile.write('\n\nCMD: {python} {program}'.format(python=sys.prefix, program=' '.join(sys.argv)))
-        logfile.write('\n\n-*- Arguments -*-\n\n')
+        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Arguments -*-'.center(80, ' ')))
         for key, value in args.__dict__.items():
-            logfile.write('{key} = {value}\n'.format(key=key, value=value))
+            logfile.write('ARG: {key} = {value}\n'.format(key=key, value=value))
 
     log = MODE.get(args.mode or 'all')(args, file=logfile, date=logdate)
     if not args.quiet:
-        os.system('echo "-*- $({color})Update Log$({reset}) -*-"; echo ;'.format(
+        os.system('echo "-*- $({color})Update Logs$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
         ))
 
@@ -221,13 +221,13 @@ def main():
                 ))
 
     with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
-        logfile.write('\n\n-*- Logs -*-\n\n')
+        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Update Logs -*-'.center(80, ' ')))
         for mode in log:
             if log[mode] and all(log[mode]):
-                logfile.write("Updated following {} packages: {}.\n".format(NAME.get(mode, mode), ', '.join(log[mode])))
+                logfile.write("LOG: Updated following {} packages: {}.\n".format(NAME.get(mode, mode), ', '.join(log[mode])))
             else:
-                logfile.write("No package updated in {}.\n".format(NAME.get(mode, mode)))
-        logfile.write('\n\n')
+                logfile.write("LOG: No package updated in {}.\n".format(NAME.get(mode, mode)))
+        logfile.write('\n\n\n\n')
 
 
 if __name__ == '__main__':

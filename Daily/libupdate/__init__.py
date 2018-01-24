@@ -29,7 +29,7 @@ def update_apm(args, *, file, date, retset=False):
     verbose = str(args.verbose).lower()
     package = _merge_packages(args)
 
-    open(file.name, 'a').write('\n-*- Atom -*-\n')
+    open(file.name, 'a').write('\n\n{mode}\n\n'.format(mode='-*- Atom -*-'.center(80, ' ')))
     if not args.quiet:
         os.system('echo "-*- $({color})Atom$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
@@ -60,29 +60,30 @@ def update_pip(args, *, file, date, retset=False):
     verbose = str(args.verbose).lower()
     package = _merge_packages(args)
 
-    open(file.name, 'a').write('\n\n-*- Python -*-\n\n')
+    open(file.name, 'a').write('\n\n{mode}\n\n'.format(mode='-*- Python -*-'.center(80, ' ')))
     if not args.quiet:
         os.system('echo "-*- $({color})Python$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
         ))
 
-    if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
+    if 'all' in package and not any((args.system, args.brew, args.cpython, args.pypy)):
         system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
-        logging = subprocess.run(
-            ['bash', 'libupdate/logging_pip.sh', system, brew, cpython, pypy, version, date],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
-        )
-        log = set(logging.stdout.split())
     else:
         system, brew, cpython, pypy, version = \
             str(args.system).lower(), str(args.brew).lower(), \
-            str(args.cpython).lower(), str(args.pypy).lower(), str(args.version)
-        log = package
+            str(args.cpython).lower(), str(args.pypy).lower(), str(args.version or 1)
 
-    for name in package:
-        subprocess.run(
-            ['bash', 'libupdate/update_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, date]
-        )
+    logging = subprocess.run(
+        ['bash', 'libupdate/logging_pip.sh', system, brew, cpython, pypy, version, date],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
+    )
+    log = set(logging.stdout.split())
+    print(logging.stdout)
+
+    # for name in package:
+    #     subprocess.run(
+    #         ['bash', 'libupdate/update_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, date]
+    #     )
 
     os.system('cls' if os.name == 'nt' else 'clear')
     return log if retset else dict(pip=log)
@@ -93,21 +94,21 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
     verbose = str(args.verbose).lower()
     package = _merge_packages(args)
 
-    open(file.name, 'a').write('\n-*- Homebrew -*-\n')
+    open(file.name, 'a').write('\n\n{mode}\n\n'.format(mode='-*- Homebrew -*-'.center(80, ' ')))
     if not args.quiet:
         os.system('echo "-*- $({color})Homebrew$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
         ))
 
     subprocess.run(
-        ['bash', 'libupdate/logging_brew.sh', quiet, verbose, date]
+        ['bash', 'libupdate/renew_brew.sh', quiet, verbose, date]
     )
 
-    logging = subprocess.run(
-        shlex.split('brew outdated --quiet'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
-    )
     if 'all' in package:
+        logging = subprocess.run(
+            ['bash', 'libupdate/logging_brew.sh', date],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8'
+        )
         log = set(logging.stdout.split())
         outdated = 'true' if logging.stdout else 'false'
     else:
@@ -133,7 +134,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
     verbose = str(args.verbose).lower()
     package = _merge_packages(args)
 
-    open(file.name, 'a').write('\n-*- Caskroom -*-\n')
+    open(file.name, 'a').write('\n\n{mode}\n\n'.format(mode='-*- Caskroom -*-'.center(80, ' ')))
     if not args.quiet:
         os.system('echo "-*- $({color})Caskroom$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
@@ -169,7 +170,7 @@ def update_appstore(args, *, file, date, retset=False):
     verbose = str(args.verbose).lower()
     package = _merge_packages(args)
 
-    open(file.name, 'a').write('\n-*- App Store -*-\n')
+    open(file.name, 'a').write('\n\n{mode}\n\n'.format(mode='-*- App Store -*-'.center(80, ' ')))
     if not args.quiet:
         os.system('echo "-*- $({color})App Store$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
