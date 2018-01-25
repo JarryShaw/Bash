@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# clear potential ternminal buffer
+# clear potential terminal buffer
 sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
 
 
@@ -12,7 +12,7 @@ sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
 #   1. System Flag
 #   2. Cellar Flag
 #   3. CPython Flag
-#   4. Pypy Flag
+#   4. PyPy Flag
 #   5. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
@@ -31,15 +31,15 @@ logdate=$6
 
 
 # log file prepare
-logfile="$logdate.log"
+logfile="/Library/Logs/Scripts/update/$logdate.log"
 tmpfile="/tmp/update.log"
 
 
-# remove /temp/update.log
+# remove /tmp/update.log
 rm -f $tmpfile
 
 
-# create /temp/update.log & log/update/logdate.log
+# create /tmp/update.log & /Library/Logs/Scripts/update/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -51,8 +51,8 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 # log commands
 logprefix="script -q /dev/null"
-logsuffix="tee -a \"$tmpfile\""
-seperator="|"
+logcattee="tee -a $tmpfile"
+logsuffix="grep -v '.*'"
 
 
 # pip logging function usage:
@@ -93,10 +93,15 @@ function piplogging {
             pprint="_pypy3" ;;
     esac
 
-    # check for outdated packages
-    echo -e "++ pip$pprint list --format legacy --not-required --outdate | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
-    eval $logprefix $prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/" $seperator $logsuffix
-    echo >> $tmpfile
+    # if executive exits
+    if [ -e $prefix/pip$suffix ] ; then
+        # check for outdated packages
+        echo -e "++ pip$pprint list --format legacy --not-required --outdate | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
+        $logprefix $prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
+        echo >> $tmpfile
+    else
+        echo -e "$prefix/pip$suffix: No such file or directory.\n" >> $tmpfile
+    fi
 }
 
 
@@ -170,7 +175,7 @@ for index in ${!list[*]} ; do
 done
 
 
-# read /temp/update.log line by line then migrate to log file
+# read /tmp/update.log line by line then migrate to log file
 while read -r line ; do
     # plus `+` proceeds in line
     if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
@@ -179,32 +184,40 @@ while read -r line ; do
     elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
         echo "$line" | sed "y/-/+/" >> $logfile
     # colon `:` in line
-    elif [[ $line =~ ^([:alnum:][:alnum:]*)(:)(.*)$ ]] ; then
+    elif [[ $line =~ ^([[:alnum:]][[:alnum:]]*)(:)(.*)$ ]] ; then
         # log tag
         prefix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/\(.*\)*:\ .*/\1/" | cut -c 1-3 | tr "[a-z]" "[A-Z]"`
         # log content
         suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
-        # write to log/update/logdate.log
+        # write to /Library/Logs/Scripts/update/logdate.log
         echo "$prefix: $suffix" >> $logfile
-    # colourised `[??m` line
-    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
-        # add `ERR` tag and remove special characters then write to log/update/logdate.log
+    # error (red/[31m) line
+    elif [[ $line =~ ^(.*)(\[31m)(.*)$ ]] ; then
+        # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
         echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
-    # non-empty line
-    elif [[ -nz $line ]] ; then
-        # add `INF` tag, remove special characters and discard flushed lines then write to log/update/logdate.log
-        echo $line | sed "s/^/INF: /" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" >> $logfile
-    # empty line
-    else
-        # directly write to log/update/logdate.log
+    # warning (yellow/[33m)
+    elif [[ $line =~ ^(.*)(\[33m)(.*)$ ]] ; then
+        # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+        echo "WAR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+    # other colourised `[??m` line
+    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
+        # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+        echo "INF: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+    # empty / blank line
+    elif [[ $line =~ ^([[:space:]]*)$ ]] ; then
+        # directlywrite to /Library/Logs/Scripts/update/logdate.log
         echo $line >> $logfile
+    # non-empty line
+    else
+        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/update/logdate.log
+        echo "OUT: $line" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" | sed "/##*\ \ *.*%/d" >> $logfile
     fi
 done < $tmpfile
 
 
-# remove /temp/update.log
+# remove /tmp/update.log
 # rm -f $tmpfile
 
 
-# clear potential ternminal buffer
+# clear potential terminal buffer
 sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null

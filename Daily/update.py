@@ -7,6 +7,7 @@ import datetime
 import libupdate
 import os
 import pathlib
+import platform
 import sys
 
 
@@ -49,8 +50,8 @@ def get_parser():
     subparser = parser.add_subparsers(title='mode selection', metavar='MODE',
                         dest='mode', help=(
                             'Update outdated packages installed through '
-                            'a specified method, e.g.: pip, brew, cask, '
-                            'or appstore.'
+                            'a specified method, e.g.: apm, pip, brew, '
+                            'cask, or appstore.'
                         ))
 
     parser_apm = subparser.add_parser('apm', description=(
@@ -101,7 +102,7 @@ def get_parser():
                         ))
     parser_pip.add_argument('-y', '--pypy', action='store_true', default=False,
                         dest='pypy', help=(
-                            'Update pip packages on Pypy environment.'
+                            'Update pip packages on PyPy environment.'
                         ))
     parser_pip.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
@@ -128,6 +129,14 @@ def get_parser():
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
                         ))
+    parser_brew.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Use "--force" when running `brew update`.'
+                        ))
+    parser_brew.add_argument('-m', '--merge', action='store_true', default=False,
+                        help=(
+                            'Use "--merge" when running `brew update`.'
+                        ))
     parser_brew.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
@@ -148,6 +157,15 @@ def get_parser():
     parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be updated, default is all.'
+                        ))
+    parser_cask.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Use "--force" when running `brew cask upgrade`.'
+                        ))
+    parser_cask.add_argument('-g', '--greedy', action='store_true', default=False,
+                        help=(
+                            'Use "--greedy" when running `brew cask outdated`, '
+                            'and directly run `brew cask upgrade --greedy`.'
                         ))
     parser_cask.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
@@ -176,6 +194,18 @@ def get_parser():
                         ))
     # parser_appstore.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
+    parser.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Run in force mode, only for Homebrew or Caskroom.'
+                        ))
+    parser.add_argument('-m', '--merge', action='store_true', default=False,
+                        help=(
+                            'Run in merge mode, only for Homebrew.'
+                        ))
+    parser.add_argument('-g', '--greedy', action='store_true', default=False,
+                        help=(
+                            'Run in greedy mode, only for Caskroom.'
+                        ))
     parser.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
@@ -190,21 +220,28 @@ def get_parser():
 
 
 def main():
+    if platform.system() != 'Darwin':
+        os.system('echo "Script $({under})update$({reset}) runs only on $({bold})$({color})macOS$({reset})."'.format(
+            bold='tput bold', color='tput setaf 1', under='tput smul', reset='tput sgr0'
+        ))
+        sys.exit(1)
+
     # sys.argv.insert(1, '--all')
     parser = get_parser()
     args = parser.parse_args()
 
     logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
-    pathlib.Path('log/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
+    pathlib.Path('/Library/Logs/Scripts/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
 
-    with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
+    logname = '/Library/Logs/Scripts/update/{date}.log'.format(date=logdate)
+    with open(logname, 'a') as logfile:
         logfile.write(datetime.date.strftime(datetime.datetime.today(), '%+').center(80, '—'))
         logfile.write('\n\nCMD: {python} {program}'.format(python=sys.prefix, program=' '.join(sys.argv)))
         logfile.write('\n\n{mode}\n\n'.format(mode='-*- Arguments -*-'.center(80, ' ')))
         for key, value in args.__dict__.items():
             logfile.write('ARG: {key} = {value}\n'.format(key=key, value=value))
 
-    log = MODE.get(args.mode or 'all')(args, file=logfile, date=logdate)
+    log = MODE.get(args.mode or 'all')(args, file=logname, date=logdate)
     if not args.quiet:
         os.system('echo "-*- $({color})Update Logs$({reset}) -*-"; echo ;'.format(
             color='tput setaf 14', reset='tput sgr0'
@@ -220,7 +257,7 @@ def main():
                     NAME.get(mode, mode), color='tput setaf 2', reset='tput sgr0'
                 ))
 
-    with open('log/update/{date}.log'.format(date=logdate), 'a') as logfile:
+    with open('/Library/Logs/Scripts/update/{date}.log'.format(date=logdate), 'a') as logfile:
         logfile.write('\n\n{mode}\n\n'.format(mode='-*- Update Logs -*-'.center(80, ' ')))
         for mode in log:
             if log[mode] and all(log[mode]):
