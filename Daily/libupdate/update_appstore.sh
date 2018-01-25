@@ -5,6 +5,10 @@
 sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
 
 
+# pre-ask sudo permission
+sudo -H echo ;
+
+
 # Preset Terminal Output Colours
 blush="tput setaf 1"    # blush / red
 green="tput setaf 2"    # green
@@ -52,11 +56,10 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 # log commands
 logprefix="script -q /dev/null"
+logcattee="tee -a $tmpfile"
 if ( $arg_q ) ; then
-    logcattee="tee -a $tmpfile"
     logsuffix="grep '.*'"
 else
-    logcattee="tee -a $tmpfile"
     logsuffix="grep -v '.*'"
 fi
 

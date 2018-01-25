@@ -43,8 +43,8 @@ logsuffix="grep -v '.*'"
 
 
 # check for oudated packages
-echo -e "+ softwareupdate --list | grep -e \"*\" | sed \"s/.*\* \(.*\)*.*/\1/\"" >> $tmpfile
-$logprefix softwareupdate --list | grep -e "*" | sed "s/.*\* \(.*\)*.*/\1/" | $logcattee | $logsuffix
+echo -e "+ softwareupdate --list | sed \"s/-$//\" | grep -e \"*\" | sed \"s/.*\* \(.*\)*[-].*/\1/\"" >> $tmpfile
+$logprefix softwareupdate --list | sed "s/-$//" | grep -e "*" | sed "s/.*\* \(.*\)*[-].*/\1/" | $logcattee | $logsuffix
 echo >> $tmpfile
 
 

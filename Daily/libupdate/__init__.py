@@ -164,9 +164,13 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
     greedy = str(args.greedy).lower()
     package = _merge_packages(args)
 
-    if shutil.which('cask') is None:
+    testing = subprocess.run(
+        shlex.split('brew cask'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if testing.returncode:
         os.system('''
-                echo "$({red})brew$({reset}): Command not found.";
+                echo "$({red})cask$({reset}): Command not found.";
                 echo "You may find Caskroom on $({under})https://caskroom.github.io$({reset}), or install Caskroom through following command:"
                 echo $({bold})'brew tap caskroom/cask'$({reset})
             '''.format(red='tput setaf 1', bold='tput bold', under='tput smul', reset='tput sgr0')
@@ -214,9 +218,6 @@ def update_appstore(args, *, file, date, retset=False):
     if shutil.which('softwareupdate') is None:
         return set() if retset else dict(appstore=set())
 
-    if not retset:
-        os.system('sudo -H echo ;')
-
     with open(file, 'a') as logfile:
         logfile.write('\n\n{mode}\n\n'.format(mode='-*- App Store -*-'.center(80, ' ')))
 
@@ -230,7 +231,7 @@ def update_appstore(args, *, file, date, retset=False):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     if 'all' in package:
-        log = set(re.split('[\n\r]', logging.stdout.decode()))
+        log = set(re.split('[\n\r]', logging.stdout.decode().strip()))
         outdated = 'true' if logging.stdout.decode() else 'false'
     else:
         log = package
@@ -248,7 +249,6 @@ def update_appstore(args, *, file, date, retset=False):
 def update_all(args, *, file, date):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
-    os.system('sudo -H echo ;')
 
     log = dict(
         apm = update_apm(args, retset=True, file=file, date=date),

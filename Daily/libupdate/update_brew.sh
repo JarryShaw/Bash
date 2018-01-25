@@ -5,6 +5,10 @@
 sript -q /dev/null clear > /dev/null 2>&1 | tee /dev/null
 
 
+# pre-ask sudo permission
+sudo -H echo ;
+
+
 # Preset Terminal Output Colours
 blush="tput setaf 1"    # blush / red
 green="tput setaf 2"    # green
@@ -31,7 +35,7 @@ arg_q=$2
 arg_v=$3
 logdate=$4
 arg_o=$5
-arg_opkg=${*:76}
+arg_opkg=${*:6}
 
 
 # log file prepare
@@ -55,12 +59,11 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 # log commands
 logprefix="script -q /dev/null"
+logcattee="tee -a $tmpfile"
 if ( $arg_q ) ; then
-    logcattee="tee -a $tmpfile"
     logsuffix="grep '.*'"
 else
     logcattee="tee -a $tmpfile"
-    logsuffix="grep -v '.*'"
 fi
 
 
