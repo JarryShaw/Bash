@@ -231,6 +231,7 @@ def main():
     args = parser.parse_args()
 
     logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
+    pathlib.Path('/tmp/log').mkdir(parents=True, exist_ok=True)
     pathlib.Path('/Library/Logs/Scripts/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
 
     logname = '/Library/Logs/Scripts/update/{date}.log'.format(date=logdate)
