@@ -12,7 +12,7 @@ import sys
 
 
 # version string
-__version__ = '0.3.0'
+__version__ = '0.5.1'
 
 
 # display mode names
@@ -71,7 +71,7 @@ def get_parser():
                         ))
     parser_apm.add_argument('-v', '--verbose', action='store_true', default=False,
                         help=(
-                            'Run in verbose mode, with more information.'
+                            'Run in verbose mode, with detailed output information.'
                         ))
     # parser_apm.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -114,7 +114,7 @@ def get_parser():
                         ))
     parser_pip.add_argument('-v', '--verbose', action='store_true', default=False,
                         help=(
-                            'Run in verbose mode, with more information.'
+                            'Run in verbose mode, with detailed output information.'
                         ))
     # parser_pip.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -143,7 +143,7 @@ def get_parser():
                         ))
     parser_brew.add_argument('-v', '--verbose', action='store_true', default=False,
                         help=(
-                            'Run in verbose mode, with more information.'
+                            'Run in verbose mode, with detailed output information.'
                         ))
     # parser_brew.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -173,7 +173,7 @@ def get_parser():
                         ))
     parser_cask.add_argument('-v', '--verbose', action='store_true', default=False,
                         help=(
-                            'Run in verbose mode, with more information.'
+                            'Run in verbose mode, with detailed output information.'
                         ))
     # parser_cask.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 
@@ -212,7 +212,7 @@ def get_parser():
                         ))
     parser.add_argument('-v', '--verbose', action='store_true', default=False,
                         help=(
-                            'Run in verbose mode, with more information.'
+                            'Run in verbose mode, with detailed output information.'
                         ))
     # parser.add_argument('extra', metavar='MODE', nargs='*', help='Other commands.')
 

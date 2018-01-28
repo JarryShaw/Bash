@@ -57,7 +57,6 @@ touch $tmpfile
 
 
 # log current status
-
 echo "- /bin/bash $0 $@" >> $tmpfile
 
 

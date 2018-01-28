@@ -12,24 +12,24 @@ import subprocess
 def _merge_packages(args):
     if 'package' in args and args.package:
         allflag = False
-        package = set()
-        for pkg in args.package:
+        packages = set()
+        for pkg in args.packages:
             if allflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
                 if 'all' in list_:
-                    package = {'all'}
+                    packages = {'all'}
                     allflag = True; break
-                package = package.union(set(list_))
+                packages = packages.union(set(list_))
     else:
-        package = {'all'}
-    return package
+        packages = {'all'}
+    return packages
 
 
 def update_apm(args, *, file, date, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
-    package = _merge_packages(args)
+    packages = _merge_packages(args)
 
     if shutil.which('apm') is None:
         os.system('''
@@ -47,7 +47,7 @@ def update_apm(args, *, file, date, retset=False):
             color='tput setaf 14', reset='tput sgr0'
         ))
 
-    if 'all' in package:
+    if 'all' in packages:
         logging = subprocess.run(
             ['bash', 'libupdate/logging_apm.sh', date],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -55,23 +55,24 @@ def update_apm(args, *, file, date, retset=False):
         log = set(logging.stdout.split())
         outdated = 'true' if logging.stdout.decode() else 'false'
     else:
-        log = package
+        log = packages
         outdated = 'true'
 
-    for name in package:
+    for name in packages:
         subprocess.run(
             ['bash', 'libupdate/update_apm.sh', name, quiet, verbose, date, outdated] + \
             shlex.split(logging.stdout.decode())
         )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log if retset else dict(apm=log)
 
 
 def update_pip(args, *, file, date, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
-    package = _merge_packages(args)
+    packages = _merge_packages(args)
 
     with open(file, 'a') as logfile:
         logfile.write('\n\n{mode}\n\n'.format(mode='-*- Python -*-'.center(80, ' ')))
@@ -81,7 +82,7 @@ def update_pip(args, *, file, date, retset=False):
             color='tput setaf 14', reset='tput sgr0'
         ))
 
-    if 'all' in package and args.mode is None:
+    if 'all' in packages and args.mode is None:
         system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
     else:
         system, brew, cpython, pypy, version = \
@@ -94,12 +95,13 @@ def update_pip(args, *, file, date, retset=False):
     )
     log = set(logging.stdout.decode().split())
 
-    for name in package:
+    for name in packages:
         subprocess.run(
             ['bash', 'libupdate/update_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, date]
         )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log if retset else dict(pip=log)
 
 
@@ -108,7 +110,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
     verbose = str(args.verbose).lower()
     force = str(args.force).lower()
     merge = str(args.merge).lower()
-    package = _merge_packages(args)
+    packages = _merge_packages(args)
 
     if shutil.which('brew') is None:
         os.system('''
@@ -131,7 +133,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         ['bash', 'libupdate/renew_brew.sh', quiet, verbose, force, merge, date]
     )
 
-    if 'all' in package:
+    if 'all' in packages:
         logging = subprocess.run(
             ['bash', 'libupdate/logging_brew.sh', date],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -139,10 +141,10 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
     else:
-        log = package
+        log = packages
         outdated = 'true'
 
-    for name in package:
+    for name in packages:
         subprocess.run(
             ['bash', 'libupdate/update_brew.sh', name, quiet, verbose, date, outdated] + \
             shlex.split(logging.stdout.decode())
@@ -162,7 +164,8 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
             ['bash', 'libupdate/cleanup.sh', 'true', 'false', quiet, verbose, date]
         )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log if retset else dict(brew=log)
 
 
@@ -171,7 +174,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
     verbose = str(args.verbose).lower()
     force = str(args.force).lower()
     greedy = str(args.greedy).lower()
-    package = _merge_packages(args)
+    packages = _merge_packages(args)
 
     testing = subprocess.run(
         shlex.split('brew cask'),
@@ -194,7 +197,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
             color='tput setaf 14', reset='tput sgr0'
         ))
 
-    if 'all' in package:
+    if 'all' in packages:
         logging = subprocess.run(
             ['bash', 'libupdate/logging_cask.sh', greedy, date],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -202,10 +205,10 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
     else:
-        log = package
+        log = packages
         outdated = 'true'
 
-    for name in package:
+    for name in packages:
         subprocess.run(
             ['sudo', '-H', 'bash', 'libupdate/update_cask.sh', name, quiet, verbose, date, force, greedy, outdated]
         )
@@ -224,14 +227,15 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
             ['bash', 'libupdate/cleanup.sh', 'false', 'true', quiet, verbose, date]
         )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log if retset else dict(cask=log)
 
 
 def update_appstore(args, *, file, date, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
-    package = _merge_packages(args)
+    packages = _merge_packages(args)
 
     if shutil.which('softwareupdate') is None:
         return set() if retset else dict(appstore=set())
@@ -248,19 +252,20 @@ def update_appstore(args, *, file, date, retset=False):
         ['bash', 'libupdate/logging_appstore.sh', date],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    if 'all' in package:
+    if 'all' in packages:
         log = set(re.split('[\n\r]', logging.stdout.decode().strip()))
         outdated = 'true' if logging.stdout.decode() else 'false'
     else:
-        log = package
+        log = packages
         outdated = 'true'
 
-    for name in package:
+    for name in packages:
         subprocess.run(
             ['sudo', 'bash', 'libupdate/update_appstore.sh', name, quiet, verbose, date, outdated]
         )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log if retset else dict(appstore=log)
 
 
@@ -277,7 +282,7 @@ def update_all(args, *, file, date):
     )
 
     with open(file, 'a') as logfile:
-        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Homebrew -*-'.center(80, ' ')))
+        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Cleanup -*-'.center(80, ' ')))
 
     if not args.quiet:
         os.system('tput clear')
@@ -289,5 +294,6 @@ def update_all(args, *, file, date):
         ['bash', 'libupdate/cleanup.sh', 'true', 'true', quiet, verbose, date]
     )
 
-    os.system('tput clear')
+    if not args.quiet:
+        os.system('tput clear')
     return log
