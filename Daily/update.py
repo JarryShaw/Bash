@@ -36,6 +36,20 @@ MODE = dict(
 )
 
 
+# terminal commands
+python = sys.prefix             # Python version
+program = ' '.join(sys.argv))   # arguments
+
+
+# terminal display
+red = 'tput setaf 1'    # blush / red
+green = 'tput setaf 2'  # green
+blue = 'tput setaf 14'  # blue
+bold = 'tput bold'      # bold
+under = 'tput smul'     # underline
+reset = 'tput sgr0'     # reset
+
+
 def get_parser():
     parser = argparse.ArgumentParser(prog='update', description=(
         'Automatic Package Update Manager'
@@ -221,50 +235,49 @@ def get_parser():
 
 def main():
     if platform.system() != 'Darwin':
-        os.system('echo "Script $({under})update$({reset}) runs only on $({bold})$({color})macOS$({reset})."'.format(
-            bold='tput bold', color='tput setaf 1', under='tput smul', reset='tput sgr0'
-        ))
+        os.system(f'echo "Script $({under})update$({reset}) runs only on $({bold})$({red})macOS$({reset})."'))
         sys.exit(1)
 
     # sys.argv.insert(1, '--all')
     parser = get_parser()
     args = parser.parse_args()
 
-    logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
     pathlib.Path('/tmp/log').mkdir(parents=True, exist_ok=True)
     pathlib.Path('/Library/Logs/Scripts/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
 
-    logname = '/Library/Logs/Scripts/update/{date}.log'.format(date=logdate)
+    logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
+    logname = f'/Library/Logs/Scripts/update/{logdate}.log'
+
+    mode = '-*- Arguments -*-'.center(80, ' ')
     with open(logname, 'a') as logfile:
         logfile.write(datetime.date.strftime(datetime.datetime.today(), '%+').center(80, '—'))
-        logfile.write('\n\nCMD: {python} {program}'.format(python=sys.prefix, program=' '.join(sys.argv)))
-        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Arguments -*-'.center(80, ' ')))
+        logfile.write(f'\n\nCMD: {python} {program}')
+        logfile.write(f'\n\n{mode}\n\n')
         for key, value in args.__dict__.items():
-            logfile.write('ARG: {key} = {value}\n'.format(key=key, value=value))
+            logfile.write(f'ARG: {key} = {value}\n')
 
     log = MODE.get(args.mode or 'all')(args, file=logname, date=logdate)
     if not args.quiet:
-        os.system('echo "-*- $({color})Update Logs$({reset}) -*-"; echo ;'.format(
-            color='tput setaf 14', reset='tput sgr0'
-        ))
+        os.system(f'echo "-*- $({blue})Update Logs$({reset}) -*-"; echo ;')
 
         for mode in log:
+            name = NAME.get(mode, mode)
             if log[mode] and all(log[mode]):
-                os.system('echo "Updated following {} packages: $({color}){}$({reset})."; echo ;'.format(
-                    NAME.get(mode, mode), ', '.join(log[mode]), color='tput setaf 1', reset='tput sgr0'
-                ))
+                pkgs = ', '.join(log[mode])
+                os.system(f'echo "Updated following {name} packages: $({red}){pkgs}$({reset})."; echo ;')
             else:
-                os.system('echo "$({color})No package updated in {}.$({reset})"; echo ;'.format(
-                    NAME.get(mode, mode), color='tput setaf 2', reset='tput sgr0'
-                ))
+                os.system('echo "$({green})No package updated in {name}.$({reset})"; echo ;')
 
-    with open('/Library/Logs/Scripts/update/{date}.log'.format(date=logdate), 'a') as logfile:
-        logfile.write('\n\n{mode}\n\n'.format(mode='-*- Update Logs -*-'.center(80, ' ')))
+    mode = '-*- Update Logs -*-'.center(80, ' ')
+    with open(f'/Library/Logs/Scripts/update/{logdate}.log', 'a') as logfile:
+        logfile.write('\n\n{mode}\n\n')
         for mode in log:
+            name = NAME.get(mode, mode)
             if log[mode] and all(log[mode]):
-                logfile.write("LOG: Updated following {} packages: {}.\n".format(NAME.get(mode, mode), ', '.join(log[mode])))
+                pkgs = ', '.join(log[mode])
+                logfile.write(f'LOG: Updated following {name} packages: {pkgs}.\n')
             else:
-                logfile.write("LOG: No package updated in {}.\n".format(NAME.get(mode, mode)))
+                logfile.write(f"LOG: No package updated in {name}.\n")
         logfile.write('\n\n\n\n')
 
 
