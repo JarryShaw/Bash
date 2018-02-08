@@ -125,9 +125,10 @@ while true ; do
         [nN]*)
             $blush
             $logprefix echo "Upgrade procedure declined." | $logcattee | $logsuffix
-            $reset ;;
+            $reset
+            break ;;
         * )
-            echo "Please enter yes or no." ;;
+            echo "Invalid choice." ;;
     esac
 done
 

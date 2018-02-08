@@ -241,7 +241,7 @@ done < $tmpfile
 
 
 # remove /tmp/log/update.log
-# rm -f $tmpfile
+rm -f $tmpfile
 
 
 # clear potential terminal buffer
