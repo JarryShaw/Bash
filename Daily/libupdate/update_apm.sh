@@ -87,33 +87,49 @@ else
 fi
 
 
-# All or Specified Packages
-case $arg_pkg in
-    "all")
-        # parameters since fourth are outdated packages
-        for name in $arg_opkg ; do
-            $logprefix echo "+ apm upgrade $name $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix apm upgrade $name $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        done ;;
-    *)
-        flag=`apm list --bare --no-color | sed "s/@.*//" | awk "/^$arg_pkg$/"`
-        if [[ -nz $flag ]] ; then
-            $logprefix echo "+ apm upgrade $arg_pkg $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix apm upgrade $arg_pkg $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        else
-            $blush
-            $logprefix echo "No package names $arg_pkg installed." | $logcattee | $logsuffix
-            $reset
+# ask for confirmation
+while true ; do
+    read -p "Would you like to install these updates? (yes)" answer
 
-            # did you mean
-            dym=`apm list --bare --no-color | sed "s/@.*//" | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-            fi
-        fi ;;
-esac
+    # check answer
+    case $answer in
+        [yY]*)
+            # All or Specified Packages
+            case $arg_pkg in
+                "all")
+                    # parameters since fourth are outdated packages
+                    for name in $arg_opkg ; do
+                        $logprefix echo "+ apm upgrade $name $verbose $quiet" | $logcattee | $logsuffix
+                        $logprefix apm upgrade $name $verbose $quiet -y | $logcattee | $logsuffix
+                        $logprefix echo | $logcattee | $logsuffix
+                    done ;;
+                *)
+                    flag=`apm list --bare --no-color | sed "s/@.*//" | awk "/^$arg_pkg$/"`
+                    if [[ -nz $flag ]] ; then
+                        $logprefix echo "+ apm upgrade $arg_pkg $verbose $quiet" | $logcattee | $logsuffix
+                        $logprefix apm upgrade $arg_pkg $verbose $quiet -y | $logcattee | $logsuffix
+                        $logprefix echo | $logcattee | $logsuffix
+                    else
+                        $blush
+                        $logprefix echo "No package names $arg_pkg installed." | $logcattee | $logsuffix
+                        $reset
+
+                        # did you mean
+                        dym=`apm list --bare --no-color | sed "s/@.*//" | grep $arg_pkg | xargs | sed "s/ /, /g"`
+                        if [[ -nz $dym ]] ; then
+                            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+                        fi
+                    fi ;;
+            esac
+            break;;
+        [nN]*)
+            $blush
+            $logprefix echo "Upgrade procedure declined." | $logcattee | $logsuffix
+            $reset ;;
+        * )
+            echo "Please enter yes or no." ;;
+    esac
+done
 
 
 # read /tmp/log/update.log line by line then migrate to log file

@@ -42,8 +42,8 @@ logsuffix="grep -v '.*'"
 
 
 # check for oudated packages
-echo -e "+ apm update --list --no-color | grep -e \"*\" | sed \"s/.* \(.*\)* .* -> .*/\1/\"" >> $tmpfile
-$logprefix apm update --list --no-color | grep -e "*" | sed "s/.* \(.*\)* .* -> .*/\1/" | $logcattee | $logsuffix
+echo -e "+ apm update --list --no-color | grep -e \"->\" | sed \"s/.* \(.*\)* .* -> .*/\1/\"" >> $tmpfile
+$logprefix apm update --list --no-color | grep -e "->" | sed "s/.* \(.*\)* .* -> .*/\1/" | $logcattee | $logsuffix
 echo >> $tmpfile
 
 

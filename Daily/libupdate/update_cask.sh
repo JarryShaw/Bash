@@ -18,10 +18,12 @@ reset="tput sgr0"       # reset
 #   1. Package
 #   2. Quiet Flag
 #   3. Verbose Flag
-#   4. Force Flag
-#   5. Greedy Flag
 #   4. Log Date
-#   5. Outdated Flag
+#   5. Force Flag
+#   6. Greedy Flag
+#   7. Outdated Flag
+#   8. Outdated Package
+#       ............
 ################################################################################
 
 
@@ -30,7 +32,10 @@ arg_pkg=$1
 arg_q=$2
 arg_v=$3
 logdate=$4
-arg_o=$5
+arg_f=$5
+arg_g=$6
+arg_o=$7
+arg_opkg=${*:8}
 
 
 # log file prepare
@@ -81,8 +86,10 @@ function caskupdate {
         $blush
         $logprefix echo "$cask requires update." | $logcattee | $logsuffix
         $reset
+        sudo :
         $logprefix echo "++ brew cask uninstall --force $cask $verbose $quiet" | $logcattee | $logsuffix
         $logprefix brew cask uninstall --force $cask $verbose $quiet | $logcattee | $logsuffix
+        sudo :
         $logprefix echo "++ brew cask install --force $cask $verbose $quiet" | $logcattee | $logsuffix
         $logprefix brew cask install --force $cask $verbose $quiet | $logcattee | $logsuffix
         $logprefix echo | $logcattee | $logsuffix
@@ -139,8 +146,7 @@ fi
 # All or Specified Packages
 case $arg_pkg in
     "all")
-        casks=( $(brew cask list -1) )
-        for cask in ${casks[@]} ; do
+        for cask in $arg_opkg ; do
             caskupdate $cask
         done ;;
     *)

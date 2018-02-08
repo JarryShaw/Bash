@@ -7,6 +7,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import time
 
 
 # terminal display
@@ -60,17 +61,19 @@ def update_apm(args, *, file, date, retset=False):
         )
         log = set(logging.stdout.split())
         outdated = 'true' if logging.stdout.decode() else 'false'
+        outdated_pkgs = shlex.split(logging.stdout.decode())
     else:
         log = packages
         outdated = 'true'
+        outdated_pkgs = list()
 
     for name in packages:
         subprocess.run(
-            ['bash', 'libupdate/update_apm.sh', name, quiet, verbose, date, outdated] + \
-            shlex.split(logging.stdout.decode())
+            ['bash', 'libupdate/update_apm.sh', name, quiet, verbose, date, outdated] + outdated_pkgs
         )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(apm=log)
 
@@ -143,14 +146,15 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
+        outdated_pkgs = shlex.split(logging.stdout.decode())
     else:
         log = packages
         outdated = 'true'
+        outdated_pkgs = list()
 
     for name in packages:
         subprocess.run(
-            ['bash', 'libupdate/update_brew.sh', name, quiet, verbose, date, outdated] + \
-            shlex.split(logging.stdout.decode())
+            ['bash', 'libupdate/update_brew.sh', name, quiet, verbose, date, outdated] + outdated_pkgs
         )
 
     if cleanup:
@@ -159,6 +163,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
+            time.sleep(1)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -167,6 +172,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(brew=log)
 
@@ -204,13 +210,15 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
+        outdated_pkgs = shlex.split(logging.stdout.decode())
     else:
         log = packages
         outdated = 'true'
+        outdated_pkgs = list()
 
     for name in packages:
         subprocess.run(
-            ['sudo', '-H', 'bash', 'libupdate/update_cask.sh', name, quiet, verbose, date, force, greedy, outdated]
+            ['bash', 'libupdate/update_cask.sh', name, quiet, verbose, date, force, greedy, outdated] + outdated_pkgs
         )
 
     if cleanup:
@@ -219,6 +227,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
+            time.sleep(1)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -227,6 +236,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(cask=log)
 
@@ -263,6 +273,7 @@ def update_appstore(args, *, file, date, retset=False):
         )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(appstore=log)
 
@@ -284,6 +295,7 @@ def update_all(args, *, file, date):
         logfile.write(f'\n\n{mode}\n\n')
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
         os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -292,5 +304,6 @@ def update_all(args, *, file, date):
     )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log

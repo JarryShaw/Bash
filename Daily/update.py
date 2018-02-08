@@ -38,7 +38,7 @@ MODE = dict(
 
 # terminal commands
 python = sys.prefix             # Python version
-program = ' '.join(sys.argv))   # arguments
+program = ' '.join(sys.argv)    # arguments
 
 
 # terminal display
@@ -235,7 +235,7 @@ def get_parser():
 
 def main():
     if platform.system() != 'Darwin':
-        os.system(f'echo "Script $({under})update$({reset}) runs only on $({bold})$({red})macOS$({reset})."'))
+        os.system(f'echo "Script $({under})update$({reset}) runs only on $({bold})$({red})macOS$({reset})."')
         sys.exit(1)
 
     # sys.argv.insert(1, '--all')
@@ -243,7 +243,7 @@ def main():
     args = parser.parse_args()
 
     pathlib.Path('/tmp/log').mkdir(parents=True, exist_ok=True)
-    pathlib.Path('/Library/Logs/Scripts/update'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
+    pathlib.Path('/Library/Logs/Scripts/update').mkdir(parents=True, exist_ok=True)
 
     logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
     logname = f'/Library/Logs/Scripts/update/{logdate}.log'
@@ -266,11 +266,11 @@ def main():
                 pkgs = ', '.join(log[mode])
                 os.system(f'echo "Updated following {name} packages: $({red}){pkgs}$({reset})."; echo ;')
             else:
-                os.system('echo "$({green})No package updated in {name}.$({reset})"; echo ;')
+                os.system(f'echo "$({green})No package updated in {name}.$({reset})"; echo ;')
 
     mode = '-*- Update Logs -*-'.center(80, ' ')
     with open(f'/Library/Logs/Scripts/update/{logdate}.log', 'a') as logfile:
-        logfile.write('\n\n{mode}\n\n')
+        logfile.write(f'\n\n{mode}\n\n')
         for mode in log:
             name = NAME.get(mode, mode)
             if log[mode] and all(log[mode]):
