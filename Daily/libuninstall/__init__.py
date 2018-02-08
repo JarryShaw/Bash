@@ -7,6 +7,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import time
 
 
 # terminal display
@@ -41,6 +42,7 @@ def _merge_package(args):
 def uninstall_pip(args, *, file, date, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
+    yes = str(args.yes).lower()
     idep = str(args.idep).lower()
     packages = _merge_packages(args)
 
@@ -71,10 +73,11 @@ def uninstall_pip(args, *, file, date, retset=False):
 
         for name in packages:
             subprocess.run(
-                ['bash', 'libuninstall/uninstall_pip.sh', name, system, brew, cpython, pypy, version, idep, quiet, verbose, date]
+                ['bash', 'libuninstall/uninstall_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, yes, idep, date]
             )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(pip=log)
 
@@ -89,7 +92,7 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
     if shutil.which('brew') is None:
         os.system(f'''
                 echo "$({red})brew$({reset}): Command not found.";
-                echo "You may find Homebrew on $({under})https://brew.sh$({reset}), or install Homebrew through following command:"
+                echo "You may find Homebrew on $({under})https://brew.sh$({reset}), or install Homebrew through following command:";
                 echo $({bold})'/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'$({reset})
         ''')
         return set() if retset else dict(brew=set())
@@ -100,10 +103,6 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
 
     if not args.quiet:
         os.system(f'echo "-*- $({blue})Homebrew$({reset}) -*-"; echo ;')
-
-    subprocess.run(
-        ['bash', 'libuninstall/renew_brew.sh', quiet, verbose, force, merge, date]
-    )
 
     if 'null' in packages:
         log = set()
@@ -146,7 +145,7 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
     if testing.returncode:
         os.system(f'''
                 echo "$({red})cask$({reset}): Command not found.";
-                echo "You may find Caskroom on $({under})https://caskroom.github.io$({reset}), or install Caskroom through following command:"
+                echo "You may find Caskroom on $({under})https://caskroom.github.io$({reset}), or install Caskroom through following command:";
                 echo $({bold})'brew tap caskroom/cask'$({reset})
         ''')
         return set() if retset else dict(cask=set())

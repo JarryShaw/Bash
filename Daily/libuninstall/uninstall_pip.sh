@@ -9,42 +9,47 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Log Python site packages uninstallation.
 #
 # Parameter list:
-#   1. System Flag
-#   2. Cellar Flag
-#   3. CPython Flag
-#   4. PyPy Flag
-#   5. Version
+#   1. Package
+#   2. System Flag
+#   3. Cellar Flag
+#   4. CPython Flag
+#   5. PyPy Flag
+#   6. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   6. Ignore-Dependencies Flag
-#   7. Log Date
-#   8. Uninstalling Package
-#       ............
+#   7. Quiet Flag
+#   8. Verbose Flag
+#   9. Yes Flag
+#  10. Ignore-Dependencies Flag
+#  11. Log Date
 ################################################################################
 
 
 # parameter assignment
-arg_s=$1
-arg_b=$2
-arg_c=$3
-arg_y=$4
-arg_V=$5
-arg_i=$6
-logdate=$7
-arg_pkg=${*:8}
+arg_pkg=$1
+arg_s=$2
+arg_b=$3
+arg_c=$4
+arg_y=$5
+arg_V=$6
+arg_q=$7
+arg_v=$8
+arg_Y=$9
+arg_i=$10
+logdate=$11
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
-tmpfile="/tmp/log/uninstall.log"
+logfile="/Library/Logs/Scripts/update/$logdate.log"
+tmpfile="/tmp/log/update.log"
 
 
-# remove /tmp/log/uninstall.log
+# remove /tmp/log/update.log
 rm -f $tmpfile
 
 
-# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
+# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -54,19 +59,50 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 
 # log commands
+# usage: $logprefix [command] | logcattee | logsuffix
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
-logsuffix="grep -v '.*'"
+if ( $arg_q ) ; then
+    logsuffix="grep '.*'"
+else
+    logsuffix="grep -v '.*'"
+fi
 
 
-# pip logging function usage:
-#   piplogging mode
-function piplogging {
+# pip fix missing function usage
+#   pip_fixmissing pip-prefix pip-suffix pip-pprint packages
+function pip_fixmissing {
+    # parameter assignment
+    prefix=$1
+    suffix=$2
+    pprint=$3
+    arg_mpkg=${*:4}
+
+    # log function call
+    echo "+ pip_fixmissing $@" >> $tmpfile
+
+    # reinstall missing packages
+    for $name in $arg_mpkg ; do
+        $logprefix echo "++ pip$pprint install $name --no-cache-dir $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix $prefix/pip$suffix install $name --no-cache-dir $verbose $quiet | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    done
+
+    # inform if missing packages fixed
+    if ( ! $arg_q ) ; then
+        echo "${green}All missing pip$pprint packages installed.${reset}"
+    fi
+}
+
+
+# pip uninstall function usage:
+#   pipuninstall mode
+function pipuninstall {
     # parameter assignment
     mode=$1
 
     # log function call
-    echo "+ piplogging $@" >> $tmpfile
+    echo "+ pipuninstall $@" >> $tmpfile
 
 
     # make prefix & suffix of pip
@@ -99,14 +135,111 @@ function piplogging {
 
     # if executive exits
     if [ -e $prefix/pip$suffix ] ; then
+        # All or Specified Packages
         case $arg_pkg in
             "all")
+                # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
                 list=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/"`
+                for name in $list ; do
+                    case $name in
+                        # keep fundamental packages
+                        pip|setuptools|wheel)
+                            : ;;
+                        *)
+                            if ( $arg_Y ) ; then
+                                $logprefix echo "++ pip$pprint uninstall $name --yes $verbose $quiet" | $logcattee | $logsuffix
+                                $logprefix $prefix/pip$suffix uninstall $name --yes $verbose $quiet | $logcattee | $logsuffix
+                                $logprefix echo | $logcattee | $logsuffix
+                            else
+                                while true ; do
+                                    # ask for confirmation
+                                    read -p "Would you like to uninstall $name? (y/N)" yn
+                                    case $yn in
+                                        [Yy]*)
+                                            $logprefix echo "++ pip$pprint uninstall $name --yes $verbose $quiet" | $logcattee | $logsuffix
+                                            $logprefix $prefix/pip$suffix uninstall $name --yes $verbose $quiet | $logcattee | $logsuffix
+                                            $logprefix echo | $logcattee | $logsuffix
+                                            break ;;
+                                        [Nn]*)
+                                            $blush
+                                            $logprefix echo "Uninstall procedure declined." | $logcattee | $logsuffix
+                                            $reset
+                                            break ;;
+                                        * )
+                                            echo "Invalid choice." ;;
+                                    esac
+                                done
+                            fi ;;
+                    esac
+                done ;;
+            # keep fundamental packages
+            pip|setuptools|wheel)
+                : ;;
+            *)
+                # check if package installed
+                flag=`$prefix/pip$suffix list --format legacy | awk "/^$arg_pkg$/"`
+                if [[ -nz $flag ]]; then
+                    if ( $arg_Y ) ; then
+                        $logprefix echo "++ pip$pprint uninstall $arg_pkg --yes $verbose $quiet" | $logcattee | $logsuffix
+                        $logprefix $prefix/pip$suffix uninstall $arg_pkg --yes $verbose $quiet | $logcattee | $logsuffix
+                        $logprefix echo | $logcattee | $logsuffix
+                    else
+                        while true ; do
+                            # ask for confirmation
+                            read -p "Would you like to uninstall $arg_pkg? (y/N)" yn
+                            case $yn in
+                                [Yy]*)
+                                    $logprefix echo "++ pip$pprint uninstall $arg_pkg --yes $verbose $quiet" | $logcattee | $logsuffix
+                                    $logprefix $prefix/pip$suffix uninstall $arg_pkg --yes $verbose $quiet | $logcattee | $logsuffix
+                                    $logprefix echo | $logcattee | $logsuffix
+                                    break ;;
+                                [Nn]*)
+                                    $blush
+                                    $logprefix echo "Uninstall procedure declined." | $logcattee | $logsuffix
+                                    $reset
+                                    break ;;
+                                * )
+                                    echo "Invalid choice." ;;
+                            esac
+                        done
+                    fi
+                else
+                    $blush
+                    $logprefix echo "No pip$pprint package names $arg_pkg installed." | $logcattee | $logsuffix
+                    $reset
 
-            # check for outdated packages
-            echo -e "++ pip$pprint show  | grep -e \"Requires: \" | sed \"s/Requires: //\" | sed \"s/,//g\"" >> $tmpfile
-            $logprefix $prefix/pip$suffix show  | grep -e "Requires: " | sed "s/Requires: //" | sed "s/,//g" | $logcattee | $logsuffix
-            echo >> $tmpfile
+                    # did you mean
+                    dym=`pip list --format legacy | grep $arg_pkg | xargs | sed "s/ /, /g"`
+                    if [[ -nz $dym ]] ; then
+                        $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+                    fi
+                fi ;;
+        esac
+
+        # fix missing package dependencies
+        miss=`$prefix/pip$suffix check | sed "s/.* requires \(.*\)*, .*/\1/" | sort -u | xargs`
+        if [[ -nz $miss ]] ; then
+            echo "Required packages found missing: ${red}${miss}${reset}"
+            if ( $arg_Y ) ; then
+                pip_fixmissing $prefix $suffix $pprint $miss
+            else
+                while true ; do
+                    read -p "Would you like to fix? (y/N)" yn
+                    case $yn in
+                        [Yy]* )
+                            pip_fixmissing $prefix $suffix $pprint $miss
+                            break ;;
+                        [Nn]* )
+                            $blush
+                            $logprefix echo "Missing packages remained." | $logcattee | $logsuffix
+                            $reset
+                            break ;;
+                        * )
+                            echo "Invalid choice." ;;
+                    esac
+                done
+            fi
+        fi
     else
         echo -e "$prefix/pip$suffix: No such file or directory.\n" >> $tmpfile
     fi
@@ -255,7 +388,7 @@ done < $tmpfile
 
 
 # remove /tmp/log/uninstall.log
-# rm -f $tmpfile
+rm -f $tmpfile
 
 
 # clear potential terminal buffer

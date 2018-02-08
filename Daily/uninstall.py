@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-# NOTE: Shell scripts of `uninstall` is not revised yet.
-
-
 import argparse
 import datetime
 import libuninstall
@@ -26,6 +23,16 @@ NAME = dict(
 )
 
 
+# mode actions
+MODE = dict(
+    all = lambda *args, **kwargs: libupdate.update_all(*args, **kwargs),
+    pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
+    brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
+    cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
+    null = lambda *args, **kwargs: libupdate.update_null(*args, **kwargs),
+)
+
+
 # terminal commands
 python = sys.prefix             # Python version
 program = ' '.join(sys.argv))   # arguments
@@ -38,16 +45,6 @@ blue = 'tput setaf 14'  # blue
 bold = 'tput bold'      # bold
 under = 'tput smul'     # underline
 reset = 'tput sgr0'     # reset
-
-
-# mode actions
-MODE = dict(
-    all = lambda *args, **kwargs: libupdate.update_all(*args, **kwargs),
-    pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
-    brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
-    cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
-    null = lambda *args, **kwargs: libupdate.update_null(*args, **kwargs),
-)
 
 
 def get_parser():
@@ -220,7 +217,7 @@ def main():
     pathlib.Path('/Library/Logs/Scripts/uninstall'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
 
     logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
-    logname = '/Library/Logs/Scripts/uninstall/{date}.log'.format(date=logdate)
+    logname = f'/Library/Logs/Scripts/uninstall/{logdate}.log'
 
     mode = '-*- Arguments -*-'.center(80, ' ')
     with open(logname, 'a') as logfile:
