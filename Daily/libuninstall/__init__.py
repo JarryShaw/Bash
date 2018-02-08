@@ -3,120 +3,197 @@
 
 
 import os
+import re
 import shlex
+import shutil
 import subprocess
 
 
-def _append_package(args):
+# terminal display
+red = 'tput setaf 1'    # blush / red
+blue = 'tput setaf 14'  # blue
+reset = 'tput sgr0'     # reset
+bold = 'tput bold'      # bold
+under = 'tput smul'     # underline
+
+
+def _merge_package(args):
     if 'package' in args and args.package:
         allflag = False
-        package = set()
-        for pkg in args.package:
-            if allflag: break
+        nullflag = False
+        packages = set()
+        for pkg in args.packages:
+            if allflag or nullflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
                 if 'all' in list_:
-                    package = {'all'}
+                    packages = {'all'}
                     allflag = True; break
-                package = package.union(set(list_))
+                if 'null' in list_:
+                    packages = {'null'}
+                    nullflag = True; break
+                packages = packages.union(set(list_))
     else:
-        package = {'null'}
-    return package
+        packages = {'null'}
+    return packages
 
 
-def uninstall_pip(args):
-    quiet = '--quiet' if args.quiet else ''
-    package = _append_package(args)
+def uninstall_pip(args, *, file, date, retset=False):
+    quiet = str(args.quiet).lower()
+    verbose = str(args.verbose).lower()
+    idep = str(args.idep).lower()
+    packages = _merge_packages(args)
 
-    log = dict(pip=set())
-    if 'null' in package:
-        return log
+    mode = '-*- Python -*-'.center(80, ' ')
+    with open(file, 'a') as logfile:
+        logfile.write(f'\n\n{mode}\n\n')
 
-    if 'all' in package or not all((args.system, args.brew, args.cpython, args.pypy)):
-        yes, system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', 'true', '1'
+    if not args.quiet:
+        os.system(f'echo "-*- $({blue})Python$({reset}) -*-"; echo ;')
+
+    if 'null' in packages:
+        log = set()
+        if not args.quiet:
+            os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
     else:
-        yes, system, brew, cpython, pypy, version = \
-            str(args.yes).lower(), str(args.system).lower(), str(args.brew).lower(), \
-            str(args.cpython).lower(), str(args.pypy).lower(), str(args.version)
+        if 'all' in packages and args.mode is None:
+            system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
+        else:
+            system, brew, cpython, pypy, version = \
+                str(args.system).lower(), str(args.brew).lower(), \
+                str(args.cpython).lower(), str(args.pypy).lower(), str(args.version or 1)
 
-    for temppkg in package:
-        logging = subprocess.Popen(
-            ['bash', './logging_pip.sh', system, brew, cpython, pypy, version, temppkg],
+        logging = subprocess.run(
+            ['bash', 'libuninstall/logging_pip.sh', system, brew, cpython, pypy, version, idep, date] + list(packages),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        output, error = logging.communicate()
-        if output:
-            log['pip'] = log['pip'].union(set([temppkg] + output.decode().split()))
+        log = set(logging.stdout.decode().split())
 
-        installed = 'false' if output else 'true'
-        subprocess.run(
-            ['bash', './uninstall_pip.sh', system, brew, cpython, pypy, version, \
-                temppkg, quiet, yes, installed, temppkg] + shlex.split(output.decode())
-        )
+        for name in packages:
+            subprocess.run(
+                ['bash', 'libuninstall/uninstall_pip.sh', name, system, brew, cpython, pypy, version, idep, quiet, verbose, date]
+            )
 
-    return log
-
-
-def uninstall_brew(args):
-    quiet = '--quiet' if args.quiet else ''
-    package = _append_package(args)
-    yes = str(args.yes).lower()
-
-    log = dict(brew=set())
-    if 'null' in package:
-        return log
-
-    for temppkg in package:
-        logging = subprocess.Popen(
-            ['bash', './logging_brew.sh', temppkg],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, error = logging.communicate()
-        if output:
-            log['brew'] = log['brew'].union(set([temppkg] + output.decode().split()))
-
-        installed = 'false' if output else 'true'
-        subprocess.run(
-            ['bash', './uninstall_brew.sh', quiet, yes, installed, temppkg] + shlex.split(output.decode())
-        )
-
-    return log
+    if not args.quiet:
+        os.system('tput clear')
+    return log if retset else dict(pip=log)
 
 
-def uninstall_cask(args):
-    quiet = '--quiet' if args.quiet else ''
-    package = _append_package(args)
+def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
+    quiet = str(args.quiet).lower()
+    verbose = str(args.verbose).lower()
+    force = str(args.force).lower()
+    merge = str(args.merge).lower()
+    packages = _merge_packages(args)
 
-    log = dict(cask=set())
-    if 'null' in package:
-        return log
-    elif 'all' in package:
-        logging = subprocess.Popen(
-            shlex.split('brew cask list'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, error = logging.communicate()
-        log['cask'] = log['cask'].union(set(output.decode().split()))
+    if shutil.which('brew') is None:
+        os.system(f'''
+                echo "$({red})brew$({reset}): Command not found.";
+                echo "You may find Homebrew on $({under})https://brew.sh$({reset}), or install Homebrew through following command:"
+                echo $({bold})'/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'$({reset})
+        ''')
+        return set() if retset else dict(brew=set())
+
+    mode = '-*- Homebrew -*-'.center(80, ' ')
+    with open(file, 'a') as logfile:
+        logfile.write(f'\n\n{mode}\n\n')
+
+    if not args.quiet:
+        os.system(f'echo "-*- $({blue})Homebrew$({reset}) -*-"; echo ;')
+
+    subprocess.run(
+        ['bash', 'libuninstall/renew_brew.sh', quiet, verbose, force, merge, date]
+    )
+
+    if 'null' in packages:
+        log = set()
+        if not args.quiet:
+            os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
     else:
-        log['cask'] = log['cask'].union(package)
+        if 'all' in packages:
+            logging = subprocess.run(
+                ['bash', 'libuninstall/logging_brew.sh', date],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            log = set(logging.stdout.decode().split())
+            outdated = 'true' if logging.stdout.decode() else 'false'
+        else:
+            log = packages
+            outdated = 'true'
 
-    for temppkg in package:
-        process = subprocess.Popen(
-            ['bash', './uninstall_cask.sh', quiet, temppkg],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, error = process.communicate()
+        for name in packages:
+            subprocess.run(
+                ['bash', 'libuninstall/uninstall_brew.sh', name, quiet, verbose, date, outdated] + \
+                shlex.split(logging.stdout.decode())
+            )
 
-    if args.quiet:
-        print(output.decode())
-    return log
+    if not args.quiet:
+        os.system('tput clear')
+    return log if retset else dict(brew=log)
 
 
-def uninstall_all(args):
-    log = uninstall_pip(args)
-    os.system('cls' if os.name=='nt' else 'clear')
-    log.update(uninstall_brew(args))
-    os.system('cls' if os.name=='nt' else 'clear')
-    log.update(uninstall_cask(args))
+def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
+    quiet = str(args.quiet).lower()
+    verbose = str(args.verbose).lower()
+    force = str(args.force).lower()
+    greedy = str(args.greedy).lower()
+    packages = _merge_packages(args)
 
+    testing = subprocess.run(
+        shlex.split('brew cask'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if testing.returncode:
+        os.system(f'''
+                echo "$({red})cask$({reset}): Command not found.";
+                echo "You may find Caskroom on $({under})https://caskroom.github.io$({reset}), or install Caskroom through following command:"
+                echo $({bold})'brew tap caskroom/cask'$({reset})
+        ''')
+        return set() if retset else dict(cask=set())
+
+    mode = '-*- Caskroom -*-'.center(80, ' ')
+    with open(file, 'a') as logfile:
+        logfile.write(f'\n\n{mode}\n\n')
+
+    if not args.quiet:
+        os.system(f'echo "-*- $({blue})Caskroom$({reset}) -*-"; echo ;')
+
+    if 'null' in packages:
+        log = set()
+        if not args.quiet:
+            os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
+    else:
+        if 'all' in packages:
+            logging = subprocess.run(
+                ['bash', 'libuninstall/logging_cask.sh', greedy, date],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            log = set(logging.stdout.decode().split())
+            outdated = 'true' if logging.stdout.decode() else 'false'
+        else:
+            log = packages
+            outdated = 'true'
+
+        for name in packages:
+            subprocess.run(
+                ['sudo', '-H', 'bash', 'libuninstall/uninstall_cask.sh', name, quiet, verbose, date, force, greedy, outdated]
+            )
+
+    if not args.quiet:
+        os.system('tput clear')
+    return log if retset else dict(cask=log)
+
+
+def uninstall_all(args, *, file, date):
+    quiet = str(args.quiet).lower()
+    verbose = str(args.verbose).lower()
+
+    log = dict(
+        pip = uninstall_pip(args, retset=True, file=file, date=date),
+        brew = uninstall_brew(args, retset=True, file=file, date=date),
+        cask = uninstall_cask(args, retset=True, file=file, date=date),
+    )
+
+    if not args.quiet:
+        os.system('tput clear')
     return log

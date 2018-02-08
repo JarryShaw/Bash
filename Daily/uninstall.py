@@ -2,15 +2,23 @@
 # -*- coding: utf-8 -*-
 
 
+# NOTE: Shell scripts of `uninstall` is not revised yet.
+
+
 import argparse
+import datetime
 import libuninstall
 import os
+import pathlib
+import platform
+import sys
 
 
 # version string
-__version__ = '0.3.0'
+__version__ = '0.3.3'
 
 
+# display mode names
 NAME = dict(
     pip = 'Python',
     brew = 'Homebrew',
@@ -18,16 +26,45 @@ NAME = dict(
 )
 
 
+# terminal commands
+python = sys.prefix             # Python version
+program = ' '.join(sys.argv))   # arguments
+
+
+# terminal display
+red = 'tput setaf 1'    # blush / red
+green = 'tput setaf 2'  # green
+blue = 'tput setaf 14'  # blue
+bold = 'tput bold'      # bold
+under = 'tput smul'     # underline
+reset = 'tput sgr0'     # reset
+
+
+# mode actions
+MODE = dict(
+    all = lambda *args, **kwargs: libupdate.update_all(*args, **kwargs),
+    pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
+    brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
+    cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
+    null = lambda *args, **kwargs: libupdate.update_null(*args, **kwargs),
+)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(prog='uninstall', description=(
-        'Automatic Package Recursive Uninstaller'
+        'Package Recursive Uninstall Manager'
     ))
-    parser.add_argument('-v', '--version', action='version',
+    parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(__version__))
+    parser.add_argument('-a', '--all', action='store_true', default=False,
+                        dest='all', help=(
+                            'Uninstall all packages installed through pip, '
+                            'Homebrew, and App Store.'
+                        ))
     subparser = parser.add_subparsers(title='mode selection', metavar='MODE',
                         dest='mode', help=(
                             'Uninstall given packages installed through '
-                            'a specified method, e.g.: pip, brew, cask.'
+                            'a specified method, e.g.: pip, brew or cask.'
                         ))
 
     parser_pip = subparser.add_parser('pip', description=(
@@ -37,10 +74,10 @@ def get_parser():
                         dest='all', help=(
                             'Uninstall all packages installed through pip.'
                         ))
-    parser_pip.add_argument('-v', '--version', action='store', metavar='VER',
+    parser_pip.add_argument('-V', '--version', action='store', metavar='VER',
                         dest='version', type=int, help=(
                             'Indicate packages in which version of pip will '
-                            'be uninstalld.'
+                            'be uninstalled.'
                         ))
     parser_pip.add_argument('-s', '--system', action='store_true', default=False,
                         dest='system', help=(
@@ -62,15 +99,24 @@ def get_parser():
                         ))
     parser_pip.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
-                            'Name of packages to be uninstalld, default is null.'
+                            'Name of packages to be uninstalled, default is null.'
                         ))
-    parser_pip.add_argument('-Y', '--yes', action='store_true', default=True,
-                        dest='yes', help=(
-                            'Yes for all selections.'
+    parser_pip.add_argument('-i', '--ignore-dependencies', action='store_true',
+                        defalt=False, dest='idep', help=(
+                            'Run in irrecursive mode, i.e. ignore dependencies '
+                            'of installing packages.'
                         ))
     parser_pip.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
+                        ))
+    parser_pip.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
+    parser_pip.add_argument('-Y', '--yes', action='store_true', default=True,
+                        dest='yes', help=(
+                            'Yes for all selections.'
                         ))
 
     parser_brew = subparser.add_parser('brew', description=(
@@ -82,15 +128,32 @@ def get_parser():
                         ))
     parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
-                            'Name of packages to be uninstalld, default is null.'
+                            'Name of packages to be uninstalled, default is null.'
                         ))
     parser_brew.add_argument('-Y', '--yes', action='store_true', default=True,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
+    parser_brew.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Use "--force" when running `brew uninstall`.'
+                        ))
+    parser_brew.add_argument('-i', '--ignore-dependencies', action='store_true',
+                        defalt=False, dest='idep', help=(
+                            'Run in irrecursive mode, i.e. ignore dependencies '
+                            'of installing packages.'
+                        ))
     parser_brew.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
+                        ))
+    parser_brew.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
+    parser_brew.add_argument('-Y', '--yes', action='store_true', default=True,
+                        dest='yes', help=(
+                            'Yes for all selections.'
                         ))
 
     parser_cask = subparser.add_parser('cask', description=(
@@ -102,18 +165,42 @@ def get_parser():
                         ))
     parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
-                            'Name of packages to be uninstalld, default is null.'
+                            'Name of packages to be uninstalled, default is null.'
+                        ))
+    parser_cask.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Use "--force" when running `brew cask uninstall`.'
                         ))
     parser_cask.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
+    parser_cask.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
+    parser_cask.add_argument('-Y', '--yes', action='store_true', default=True,
+                        dest='yes', help=(
+                            'Yes for all selections.'
+                        ))
 
+    parser.add_argument('-f', '--force', action='store_true', default=False,
+                        help=(
+                            'Run in force mode, only for Homebrew and Caskroom.'
+                        ))
+    paser.add_argument('-i', '--ignore-dependencies', action='store_true',
+                        defalt=False, dest='idep', help=(
+                            'Run in irrecursive mode, only for Python and Homebrew.'
+                        ))
     parser.add_argument('-q', '--quiet', action='store_true', default=False,
                         help=(
                             'Run in quiet mode, with no output information.'
                         ))
-    parser.add_argument('-y', '--yes', action='store_true', default=True,
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help=(
+                            'Run in verbose mode, with more information.'
+                        ))
+    parser.add_argument('-Y', '--yes', action='store_true', default=True,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
@@ -122,28 +209,53 @@ def get_parser():
 
 
 def main():
+    if platform.system() != 'Darwin':
+        os.system(f'echo "Script $({under})uninstall$({reset}) runs only on $({bold})$({red})macOS$({reset})."')
+        sys.exit(1)
+
     parser = get_parser()
     args = parser.parse_args()
 
-    if args.mode == 'pip':
-        log = libuninstall.uninstall_pip(args)
-    elif args.mode == 'brew':
-        log = libuninstall.uninstall_brew(args)
-    elif args.mode == 'cask':
-        log = libuninstall.uninstall_cask(args)
-    else:
-        log = libuninstall.uninstall_all(args)
+    pathlib.Path('/tmp/log').mkdir(parents=True, exist_ok=True)
+    pathlib.Path('/Library/Logs/Scripts/uninstall'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
 
-    os.system('cls' if os.name == 'nt' else 'clear')
+    logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
+    logname = '/Library/Logs/Scripts/uninstall/{date}.log'.format(date=logdate)
 
-    for mode in log:
-        if log[mode]:
-            print('Uninstalled packages in {}\n\t{}'.format(
-                NAME.get(mode, mode), ', '.join(log[mode])
-            ))
-        else:
-            print('No uninstallation in {}'.format(NAME.get(mode, mode)))
+    mode = '-*- Arguments -*-'.center(80, ' ')
+    with open(logname, 'a') as logfile:
+        logfile.write(datetime.date.strftime(datetime.datetime.today(), '%+').center(80, '—'))
+        logfile.write(f'\n\nCMD: {python} {program}')
+        logfile.write(f'\n\n{mode}\n\n')
+        for key, value in args.__dict__.items():
+            logfile.write(f'ARG: {key} = {value}\n')
+
+    log = MODE.get(args.mode or 'null')(args, file=logname, date=logdate)
+    if not args.quiet:
+        os.system(f'echo "-*- $({blue})Uninstall Logs$({reset}) -*-"; echo ;')
+
+        for mode in log:
+            name = NAME.get(mode, mode)
+            if log[mode] and all(log[mode]):
+                pkgs = ', '.join(log[mode])
+                comment = '' if args.idep else ' (including dependencies)'
+                os.system(f'echo "Uninstalled following {name} packages: $({red}){pkgs}$({reset}){comment}."; echo ;')
+            else:
+                os.system(f'echo "$({green})No package uninstalled in {name}.$({reset})"; echo ;')
+
+    mode = '-*- Uninstall Logs -*-'.center(80, ' ')
+    with open(f'/Library/Logs/Scripts/update/{logdate}.log', 'a') as logfile:
+        logfile.write(f'\n\n{mode}\n\n')
+        for mode in log:
+            name = NAME.get(mode, mode)
+            if log[mode] and all(log[mode]):
+                pkgs = ', '.join(log[mode])
+                comment = '' if args.idep else ' (including dependencies)'
+                logfile.write(f'LOG: Uninstalled following {name} packages: {pkgs}{comment}.\n')
+            else:
+                logfile.write(f'LOG: No package uninstalled in {name}.\n')
+        logfile.write('\n\n\n\n')
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

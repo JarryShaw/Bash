@@ -6,9 +6,10 @@
 #
 # Parameter list:
 #   1. Quiet Flag
-#   2. Yes Flag
-#   3. Installed Flag
-#   4. Dependency Package
+#   2. Verbose Flag
+#   3. Yes Flag
+#   4. Installed Flag
+#   5. Dependency Package
 #   ............
 ################################################################################
 
@@ -45,7 +46,7 @@ if [[ -z $1 ]] ; then
     echo "-*- ${color}Homebrew${reset} -*-"
     echo ;
     if ( ! $3 ) ; then
-        echo "${green}No package names $4 installed.${reset}"
+        echo "${red}No package names $4 installed.${reset}"
         exit 0
     fi
     quiet="set -x"

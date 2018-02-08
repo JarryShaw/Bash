@@ -11,6 +11,7 @@
 
 
 # Preset Terminal Output Colours
+red=`tput setaf 1`      # red
 color=`tput setaf 14`   # blue
 reset=`tput sgr0`       # reset
 
@@ -30,14 +31,19 @@ case $2 in
     "all")
         list=$( brew cask list ) ;;
     *)
-        list=$2 ;;
+        list=$( brew cask list | grep -w $2 ) ;;
 esac
 
 
 # uninstall package
-for name in $list ; do
-    ( $quiet; brew cask uninstall --froce $name $1; )
-    if [[ -z $1 ]] ; then
-        echo ;
-    fi
-done
+if [[ -nz $list ]]; then
+    for name in $list ; do
+        ( $quiet; brew cask uninstall --froce $name $1; )
+        if [[ -z $1 ]] ; then
+            echo ;
+        fi
+    done
+else
+    echo "${red}No package names $2 installed.${reset}"
+    echo ;
+fi
