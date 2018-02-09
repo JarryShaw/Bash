@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "\n-*- Zenmap quick scan -*-\n"
+echo -e "\n-*- Zenmap quick scan -*-\n"
 
 for (( i=1; i<=1000; i++))
 do

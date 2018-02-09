@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "\n-*- Zenmap slow comprehensive scan -*-\n"
+echo -e "\n-*- Zenmap slow comprehensive scan -*-\n"
 
 for (( i=1; i<=10; i++))
 do
