@@ -15,24 +15,25 @@ reset="tput sgr0"       # reset
 # Uninstall Homebrew packages.
 #
 # Parameter list:
-#   1. Package
-#   2. Force Flag
-#   3. Quiet Flag
-#   4. Verbose Flag
-#   5. Log Date
-#   6. Ignore-Dependencies Flag
-#   7. Yes Flag
+#   1. Force Flag
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Ignore-Dependencies Flag
+#   5. Yes Flag
+#   6. Log Date
+#   7. Package
+#       ............
 ################################################################################
 
 
 # parameter assignment
-arg_pkg=$1
-arg_f=$2
-arg_q=$3
-arg_v=$4
-logdate=$5
-arg_i=$6
-arg_Y=$7
+arg_f=$1
+arg_q=$2
+arg_v=$3
+arg_i=$4
+arg_Y=$5
+logdate=$6
+arg_pkg=${*:7}
 
 
 # log file prepare
@@ -72,15 +73,16 @@ function brew_fixmissing {
 
     # reinstall missing packages
     for $name in $arg_pkg ; do
-        echo -e "+ brew install $name $force $verbose $quiet" >> $tmpfile
+        $logprefix echo "+ brew install $name $force $verbose $quiet" | $logcattee | $logsuffix
         $logprefix brew install $name $force $verbose $quiet | $logcattee | $logsuffix
-        echo >> $tmpfile
+        $logprefix echo | $logcattee | $logsuffix
     done
 
     # inform if missing packages fixed
     $green
     $logprefix echo "All missing packages installed." | $logcattee | $logsuffix
     $reset
+    $logprefix echo | $logcattee | $logsuffix
 }
 
 
@@ -109,68 +111,71 @@ fi
 
 
 # uninstall all requested packages
-case $arg_pkg in
-    all)
-        list=`brew list -1`
-        for name in $list; do
-            echo -e "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" >> $tmpfile
-            $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
-            echo >> $tmpfile
-        done ;;
-    *)
-        # check if package installed
-        if brew list --versions $arg_pkg > /dev/null ; then
-            # along with dependencies or not
-            if ( $arg_i ) ; then
-                echo -e "+ brew uninstall $arg_pkg --ignore-dependencies $force $verbose $quiet" >> $tmpfile
-                $logprefix brew uninstall $arg_pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
-                echo >> $tmpfile
-            else
-                list=`brew deps $arg_pkg`
-                for name in $list; do
-                    echo -e "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" >> $tmpfile
+for name in $arg_pkg ; do
+    case $name in
+        all)
+            list=`brew list -1`
+            for pkg in $list; do
+                $logprefix echo "+ brew uninstall $pkg --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix brew uninstall $pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+            done ;;
+        *)
+            # check if package installed
+            if brew list --versions $name > /dev/null ; then
+                # along with dependencies or not
+                if ( $arg_i ) ; then
+                    $logprefix echo "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
                     $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
-                    echo >> $tmpfile
-                done
-            fi
-
-            # fix missing brew dependencies
-            miss=`brew missing | sed "s/.*: \(.*\)*/\1/" | sort -u | xargs`
-            if [[ -nz $miss ]] ; then
-                $logprefix echo "Required packages found missing: ${blush}${miss}${reset}" | $logcattee | $logsuffix
-                if ( $arg_Y ) ; then
-                    brew_fixmissing $miss
+                    $logprefix echo | $logcattee | $logsuffix
                 else
-                    while true ; do
-                        read -p "Would you like to fix? (y/N)" yn
-                        case $yn in
-                            [Yy]* )
-                                brew_fixmissing $miss
-                                break ;;
-                            [Nn]* )
-                                $blush
-                                $logprefix echo "Missing packages remained." | $logcattee | $logsuffix
-                                $reset
-                                break ;;
-                            * )
-                                echo "Invalid choice." ;;
-                        esac
+                    list=`brew deps $name`
+                    for pkg in $list; do
+                        $logprefix echo "+ brew uninstall $pkg --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
+                        $logprefix brew uninstall $pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                        $logprefix echo | $logcattee | $logsuffix
                     done
                 fi
-            fi
-        else
-            $blush
-            $logprefix echo "No available formula with the name $arg_pkg." | $logcattee | $logsuffix
-            $reset
+            else
+                $blush
+                $logprefix echo "No available formula with the name $name." | $logcattee | $logsuffix
+                $reset
 
-            # did you mean
-            dym=`brew list -1 | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-            fi
-            echo >> $tmpfile
-        fi ;;
-esac
+                # did you mean
+                dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
+                if [[ -nz $dym ]] ; then
+                    $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+                fi
+                $logprefix echo | $logcattee | $logsuffix
+            fi ;;
+    esac
+done
+
+
+# fix missing brew dependencies
+miss=`brew missing | sed "s/.*: \(.*\)*/\1/" | sort -u | xargs`
+if [[ -nz $miss ]] ; then
+    $logprefix echo "Required packages found missing: ${blush}${miss}${reset}" | $logcattee | $logsuffix
+    if ( $arg_Y ) ; then
+        brew_fixmissing $miss
+    else
+        while true ; do
+            read -p "Would you like to reinstall? (y/N)" yn
+            case $yn in
+                [Yy]* )
+                    brew_fixmissing $miss
+                    break ;;
+                [Nn]* )
+                    $blush
+                    $logprefix echo "Missing packages unfixed." | $logcattee | $logsuffix
+                    $reset
+                    break ;;
+                * )
+                    echo "Invalid choice." ;;
+            esac
+        done
+    fi
+fi
 
 
 # read /tmp/log/uninstall.log line by line then migrate to log file

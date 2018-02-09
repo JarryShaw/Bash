@@ -15,20 +15,21 @@ reset=`tput sgr0`       # reset
 # Uninstall Caskroom packages.
 #
 # Parameter list:
-#   1. Package
-#   2. Quiet Flag
-#   3. Verbose Flag
-#   4. Force Flag
-#   5. Log Date
+#   1. Quiet Flag
+#   2. Verbose Flag
+#   3. Force Flag
+#   4. Log Date
+#   5. Package
+#       ............
 ################################################################################
 
 
 # parameter assignment
-arg_pkg=$1
-arg_q=$2
-arg_v=$3
-arg_f=$4
-logdate=$5
+arg_q=$1
+arg_v=$2
+arg_f=$3
+logdate=$4
+arg_pkg=${*:5}
 
 
 # log file prepare
@@ -84,33 +85,41 @@ fi
 
 
 # uninstall procedure
-case $arg_pkg in
-    all)
-        list=`brew cask list -1`
-        for name in $list; do
-            echo -e "+ brew cask uninstall $name $force $verbose $quiet" >> $tmpfile
-            $logprefix brew cask uninstall $name $force $verbose $quiet | $logcattee | $logsuffix
-            echo >> $tmpfile
-        done ;;
-    *)
-        # check if package installed
-        if brew cask list --versions $arg_pkg > /dev/null 2>&1 ; then
-            echo -e "+ brew cask uninstall $arg_pkg $force $verbose $quiet" >> $tmpfile
-            $logprefix brew cask uninstall $arg_pkg $force $verbose $quiet | $logcattee | $logsuffix
-            echo >> $tmpfile
-        else
-            $blush
-            $logprefix echo "No available formula with the name $arg_pkg." | $logcattee | $logsuffix
-            $reset
+for name in $arg_pkg ; do
+    case $name in
+        all)
+            list=`brew cask list -1`
+            for pkg in $list ; do
+                # request sudo previlege
+                sudo :
 
-            # did you mean
-            dym=`brew list -1 | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-            fi
-            echo >> $tmpfile
-        fi ;;
-esac
+                $logprefix echo "+ brew cask uninstall $pkg $force $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix brew cask uninstall $pkg $force $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+            done ;;
+        *)
+            # check if package installed
+            if brew cask list --versions $name > /dev/null 2>&1 ; then
+                # request sudo previlege
+                sudo :
+
+                $logprefix echo "+ brew cask uninstall $name $force $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix brew cask uninstall $name $force $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+            else
+                $blush
+                $logprefix echo "No available formula with the name $name." | $logcattee | $logsuffix
+                $reset
+
+                # did you mean
+                dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
+                if [[ -nz $dym ]] ; then
+                    $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+                fi
+                $logprefix echo | $logcattee | $logsuffix
+            fi ;;
+    esac
+done
 
 
 # read /tmp/log/uninstall.log line by line then migrate to log file

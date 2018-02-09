@@ -12,13 +12,14 @@ import time
 
 # terminal display
 red = 'tput setaf 1'    # blush / red
+green = 'tput setaf 2'  # green
 blue = 'tput setaf 14'  # blue
 reset = 'tput sgr0'     # reset
 bold = 'tput bold'      # bold
 under = 'tput smul'     # underline
 
 
-def _merge_package(args):
+def _merge_packages(args):
     if 'package' in args and args.package:
         allflag = False
         nullflag = False
@@ -58,7 +59,7 @@ def uninstall_pip(args, *, file, date, retset=False):
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
         with open(file, 'a') as logfile:
-            logfile.write('INF: No uninstallation performed.')
+            logfile.write('INF: No uninstallation performed.\n')
     else:
         if 'all' in packages and args.mode is None:
             system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
@@ -73,10 +74,9 @@ def uninstall_pip(args, *, file, date, retset=False):
         )
         log = set(logging.stdout.decode().split())
 
-        for name in packages:
-            subprocess.run(
-                ['bash', 'libuninstall/uninstall_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, yes, idep, date]
-            )
+        subprocess.run(
+            ['bash', 'libuninstall/uninstall_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, yes, idep, date] + list(packages)
+        )
 
     if not args.quiet:
         time.sleep(1)
@@ -112,7 +112,7 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
         with open(file, 'a') as logfile:
-            logfile.write('INF: No uninstallation performed.')
+            logfile.write('INF: No uninstallation performed.\n')
     else:
         logging = subprocess.run(
             ['bash', 'libuninstall/logging_brew.sh', date, idep] + list(packages),
@@ -120,10 +120,9 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
 
-        for name in packages:
-            subprocess.run(
-                ['bash', 'libuninstall/uninstall_brew.sh', name, force, quiet, verbose, date, idep, yes]
-            )
+        subprocess.run(
+            ['bash', 'libuninstall/uninstall_brew.sh', force, quiet, verbose, idep, yes, date] + list(packages)
+        )
 
     if not args.quiet:
         time.sleep(1)
@@ -161,7 +160,7 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
         with open(file, 'a') as logfile:
-            logfile.write('INF: No uninstallation performed.')
+            logfile.write('INF: No uninstallation performed.\n')
     else:
         logging = subprocess.run(
             ['bash', 'libuninstall/logging_cask.sh', date] + list(packages),
@@ -169,10 +168,9 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
 
-        for name in packages:
-            subprocess.run(
-                ['bash', 'libuninstall/uninstall_cask.sh', name, quiet, verbose, date, force]
-            )
+        subprocess.run(
+            ['bash', 'libuninstall/uninstall_cask.sh', quiet, verbose, force, date] + list(packages)
+        )
 
     if not args.quiet:
         time.sleep(1)
