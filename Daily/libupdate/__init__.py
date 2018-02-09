@@ -61,16 +61,13 @@ def update_apm(args, *, file, date, retset=False):
         )
         log = set(logging.stdout.split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'
-        outdated_pkgs = list()
 
-    for name in packages:
-        subprocess.run(
-            ['bash', 'libupdate/update_apm.sh', name, quiet, verbose, date, outdated] + outdated_pkgs
-        )
+    subprocess.run(
+        ['bash', 'libupdate/update_apm.sh', quiet, verbose, outdated, date] + list(log)
+    )
 
     if not args.quiet:
         time.sleep(1)
@@ -97,16 +94,18 @@ def update_pip(args, *, file, date, retset=False):
             str(args.system).lower(), str(args.brew).lower(), \
             str(args.cpython).lower(), str(args.pypy).lower(), str(args.version or 1)
 
-    logging = subprocess.run(
-        ['bash', 'libupdate/logging_pip.sh', system, brew, cpython, pypy, version, date],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    log = set(logging.stdout.decode().split())
-
-    for name in packages:
-        subprocess.run(
-            ['bash', 'libupdate/update_pip.sh', name, system, brew, cpython, pypy, version, quiet, verbose, date]
+    if 'all' in packages:
+        logging = subprocess.run(
+            ['bash', 'libupdate/logging_pip.sh', system, brew, cpython, pypy, version, date],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        log = set(logging.stdout.decode().split())
+    else:
+        log = packages
+
+    subprocess.run(
+        ['bash', 'libupdate/update_pip.sh', system, brew, cpython, pypy, version, quiet, verbose, date] + list(packages)
+    )
 
     if not args.quiet:
         os.system('tput clear')
@@ -146,16 +145,13 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'
-        outdated_pkgs = list()
 
-    for name in packages:
-        subprocess.run(
-            ['bash', 'libupdate/update_brew.sh', name, quiet, verbose, date, outdated] + outdated_pkgs
-        )
+    subprocess.run(
+        ['bash', 'libupdate/update_brew.sh', quiet, verbose, outdated, date] + list(log)
+    )
 
     if cleanup:
         mode = '-*- Cleanup -*-'.center(80, ' ')
@@ -210,16 +206,13 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'
-        outdated_pkgs = list()
 
-    for name in packages:
-        subprocess.run(
-            ['bash', 'libupdate/update_cask.sh', name, quiet, verbose, date, force, greedy, outdated] + outdated_pkgs
-        )
+    subprocess.run(
+        ['bash', 'libupdate/update_cask.sh', quiet, verbose, force, greedy, outdated, date] + list(log)
+    )
 
     if cleanup:
         mode = '-*- Cleanup -*-'.center(80, ' ')
@@ -267,10 +260,9 @@ def update_appstore(args, *, file, date, retset=False):
         log = packages
         outdated = 'true'
 
-    for name in packages:
-        subprocess.run(
-            ['sudo', 'bash', 'libupdate/update_appstore.sh', name, quiet, verbose, date, outdated]
-        )
+    subprocess.run(
+        ['sudo', 'bash', 'libupdate/update_appstore.sh', quiet, verbose, outdated, date] + list(packages)
+    )
 
     if not args.quiet:
         time.sleep(1)

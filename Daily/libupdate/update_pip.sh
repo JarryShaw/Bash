@@ -15,31 +15,32 @@ reset="tput sgr0"       # reset
 # Check Python site packages updates.
 #
 # Parameter list:
-#   1. Package
-#   2. System Flag
-#   3. Cellar Flag
-#   4. CPython Flag
-#   5. PyPy Flag
-#   6. Version
+#   1. System Flag
+#   2. Cellar Flag
+#   3. CPython Flag
+#   4. PyPy Flag
+#   5. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   7. Quiet Flag
-#   8. Verbose Flag
-#   9. Log Date
+#   6. Quiet Flag
+#   7. Verbose Flag
+#   8. Log Date
+#   9. Package
+#       ............
 ################################################################################
 
 
 # parameter assignment
-arg_pkg=$1
-arg_s=$2
-arg_b=$3
-arg_c=$4
-arg_y=$5
-arg_V=$6
-arg_q=$7
-arg_v=$8
-logdate=$9
+arg_s=$1
+arg_b=$2
+arg_c=$3
+arg_y=$4
+arg_V=$5
+arg_q=$6
+arg_v=$7
+logdate=$8
+arg_pkg=${*:9}
 
 
 # log file prepare
@@ -110,41 +111,44 @@ function pipupdate {
 
     # if executive exits
     if [ -e $prefix/pip$suffix ] ; then
-        # All or Specified Packages
-        case $arg_pkg in
-            all)
-                # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
-                list=`$prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
-                if [[ -nz $list ]] ; then
-                    for name in $list ; do
+        for name in $arg_pkg ; do
+            # All or Specified Packages
+            case $name in
+                all)
+                    # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
+                    list=`$prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
+                    if [[ -nz $list ]] ; then
+                        for pkg in $list ; do
+                            $logprefix echo "++ pip$pprint install --upgrade --no-cache-dir $pkg $verbose $quiet" | $logcattee | $logsuffix
+                            $logprefix $prefix/pip$suffix install --upgrade --no-cache-dir $pkg $verbose $quiet | $logcattee | $logsuffix
+                            $logprefix echo | $logcattee | $logsuffix
+                        done
+                    else
+                        $green
+                        $logprefix echo "All pip$pprint packages have been up-to-date." | $logcattee | $logsuffix
+                        $reset
+                        $logprefix echo | $logcattee | $logsuffix
+                    fi ;;
+                *)
+                    flag=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | awk "/^$name$/"`
+                    if [[ -nz $flag ]]; then
                         $logprefix echo "++ pip$pprint install --upgrade --no-cache-dir $name $verbose $quiet" | $logcattee | $logsuffix
                         $logprefix $prefix/pip$suffix install --upgrade --no-cache-dir $name $verbose $quiet | $logcattee | $logsuffix
                         $logprefix echo | $logcattee | $logsuffix
-                    done
-                else
-                    $green
-                    $logprefix echo "All pip$pprint packages have been up-to-date." | $logcattee | $logsuffix
-                    $reset
-                    $logprefix echo | $logcattee | $logsuffix
-                fi ;;
-            *)
-                flag=`$prefix/pip$suffix list --format legacy | awk "/^$arg_pkg$/"`
-                if [[ -nz $flag ]]; then
-                    $logprefix echo "++ pip$pprint install --upgrade --no-cache-dir $arg_pkg $verbose $quiet" | $logcattee | $logsuffix
-                    $logprefix $prefix/pip$suffix install --upgrade --no-cache-dir $arg_pkg $verbose $quiet | $logcattee | $logsuffix
-                    $logprefix echo | $logcattee | $logsuffix
-                else
-                    $blush
-                    $logprefix echo "No pip$pprint package names $arg_pkg installed." | $logcattee | $logsuffix
-                    $reset
+                    else
+                        $blush
+                        $logprefix echo "No pip$pprint package names $name installed." | $logcattee | $logsuffix
+                        $reset
 
-                    # did you mean
-                    dym=`pip list --format legacy | grep $arg_pkg | xargs | sed "s/ /, /g"`
-                    if [[ -nz $dym ]] ; then
-                        $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-                    fi
-                fi ;;
-        esac
+                        # did you mean
+                        dym=`pip list --format legacy | grep $name | xargs | sed "s/ /, /g"`
+                        if [[ -nz $dym ]] ; then
+                            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+                        fi
+                        $logprefix echo | $logcattee | $logsuffix
+                    fi ;;
+            esac
+        done
     else
         echo -e "pip$pprint: Not installed.\n" >> $tmpfile
     fi

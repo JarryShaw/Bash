@@ -15,27 +15,25 @@ reset="tput sgr0"       # reset
 # Check Caskroom updates.
 #
 # Parameter list:
-#   1. Package
-#   2. Quiet Flag
-#   3. Verbose Flag
-#   4. Log Date
-#   5. Force Flag
-#   6. Greedy Flag
-#   7. Outdated Flag
-#   8. Outdated Package
+#   1. Quiet Flag
+#   2. Verbose Flag
+#   3. Force Flag
+#   4. Greedy Flag
+#   5. Outdated Flag
+#   6. Log Date
+#   7. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_pkg=$1
-arg_q=$2
-arg_v=$3
-logdate=$4
-arg_f=$5
-arg_g=$6
-arg_o=$7
-arg_opkg=${*:8}
+arg_q=$1
+arg_v=$2
+arg_f=$3
+arg_g=$4
+arg_o=$5
+logdate=$6
+arg_pkg=${*:7}
 
 
 # log file prepare
@@ -143,26 +141,22 @@ else
 fi
 
 
-# All or Specified Packages
-case $arg_pkg in
-    all)
-        for cask in $arg_opkg ; do
-            caskupdate $cask
-        done ;;
-    *)
-        flag=`brew cask list -1 | awk "/^$arg_pkg$/"`
-        if [[ -nz $flag ]] ; then
-            caskupdate $arg_pkg
-        else
-            $logprefix echo "${blush}No cask names $arg_pkg installed.${reset}" | $logcattee | $logsuffix
+# update packages
+for name in $arg_pkg ; do
+    flag=`brew cask list -1 | awk "/^$name$/"`
+    if [[ -nz $flag ]] ; then
+        caskupdate $name
+    else
+        $logprefix echo "${blush}No cask names $name installed.${reset}" | $logcattee | $logsuffix
 
-            # did you mean
-            dym=`brew cask list -1 | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following casks: $dym?" | $logcattee | $logsuffix
-            fi
-        fi ;;
-esac
+        # did you mean
+        dym=`brew cask list -1 | grep $name | xargs | sed "s/ /, /g"`
+        if [[ -nz $dym ]] ; then
+            $logprefix echo "Did you mean any of the following casks: $dym?" | $logcattee | $logsuffix
+        fi
+        $logprefix echo | $logcattee | $logsuffix
+    fi
+done
 
 
 # read /tmp/log/update.log line by line then migrate to log file

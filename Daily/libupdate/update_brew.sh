@@ -15,23 +15,21 @@ reset="tput sgr0"       # reset
 # Check Homebrew updates.
 #
 # Parameter list:
-#   1. Package
-#   2. Quiet Flag
-#   3. Verbose Flag
+#   1. Quiet Flag
+#   2. Verbose Flag
+#   3. Outdated Flag
 #   4. Log Date
-#   5. Outdated Flag
-#   6. Outdated Packages
+#   5. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_pkg=$1
-arg_q=$2
-arg_v=$3
+arg_q=$1
+arg_v=$2
+arg_o=$3
 logdate=$4
-arg_o=$5
-arg_opkg=${*:6}
+arg_pkg=${*:5}
 
 
 # log file prepare
@@ -87,32 +85,26 @@ else
 fi
 
 
-# All or Specified Packages
-case $arg_pkg in
-    all)
-        for name in $arg_opkg ; do
-            $logprefix echo "+ brew upgrade $name --cleanup $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix brew upgrade $name --cleanup $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        done ;;
-    *)
-        flag=`brew list -1 | awk "/^$arg_pkg$/"`
-        if [[ -nz $flag ]] ; then
-            $logprefix echo "+ brew upgrade $arg_pkg --cleanup $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix brew upgrade $arg_pkg --cleanup $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        else
-            $blush
-            $logprefix echo "No package names $arg_pkg installed." | $logcattee | $logsuffix
-            $reset
+# update packages
+for name in $arg_pkg ; do
+    flag=`brew list -1 | awk "/^$name$/"`
+    if [[ -nz $flag ]] ; then
+        $logprefix echo "+ brew upgrade $name --cleanup $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix brew upgrade $name --cleanup $verbose $quiet | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    else
+        $blush
+        $logprefix echo "No package names $name installed." | $logcattee | $logsuffix
+        $reset
 
-            # did you mean
-            dym=`brew list -1 | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-            fi
-        fi ;;
-esac
+        # did you mean
+        dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
+        if [[ -nz $dym ]] ; then
+            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+        fi
+        $logprefix echo | $logcattee | $logsuffix
+    fi
+done
 
 
 # read /tmp/log/update.log line by line then migrate to log file

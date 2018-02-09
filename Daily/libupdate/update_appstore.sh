@@ -15,20 +15,21 @@ reset="tput sgr0"       # reset
 # Check software updates.
 #
 # Parameter list:
-#   1. Package
-#   2. Quiet Flag
-#   3. Verbose Flag
+#   1. Quiet Flag
+#   2. Verbose Flag
+#   3. Outdated Flag
 #   4. Log Date
-#   5. Outdated Flag
+#   5. Package
+#       ............
 ################################################################################
 
 
 # Parameter Assignment
-arg_pkg=$1
-arg_q=$2
-arg_v=$3
+arg_q=$1
+arg_v=$2
+arg_o=$3
 logdate=$4
-arg_o=$5
+arg_pkg=$5
 
 
 # log file prepare
@@ -76,31 +77,34 @@ if ( ! $arg_o ) ; then
 fi
 
 
-# All or Specified Packages
-case $arg_pkg in
-    all)
-        $logprefix echo "+ softwareupdate --install --no-scan --all $verbose $quiet" | $logcattee | $logsuffix
-        $logprefix sudo -H softwareupdate --install --no-scan --all $verbose $quiet | $logcattee | $logsuffix
-        $logprefix echo | $logcattee | $logsuffix ;;
-    *)
-        installed="find /Applications -path \"*Contents/_MASReceipt/receipt\" -maxdepth 4 -print | sed \"s#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##\""
-        flag=`$installed | sed "s/.app//" | awk "/^$arg_pkg$/"`
-        if [[ -nz $flag ]] ; then
-            $logprefix echo "+ softwareupdate --install --no-scan $arg_pkg $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix sudo -H softwareupdate --install --no-scan $arg_pkg $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        else
-            $blush
-            $logprefix echo "No application names $arg_pkg installed." | $logcattee | $logsuffix
-            $reset
+# update packages
+for name in $arg_pkg ; do
+    # All or Specified Packages
+    case $name in
+        all)
+            $logprefix echo "+ softwareupdate --install --no-scan --all $verbose $quiet" | $logcattee | $logsuffix
+            $logprefix sudo -H softwareupdate --install --no-scan --all $verbose $quiet | $logcattee | $logsuffix
+            $logprefix echo | $logcattee | $logsuffix ;;
+        *)
+            installed="find /Applications -path \"*Contents/_MASReceipt/receipt\" -maxdepth 4 -print | sed \"s#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##\""
+            flag=`$installed | sed "s/.app//" | awk "/^$name$/"`
+            if [[ -nz $flag ]] ; then
+                $logprefix echo "+ softwareupdate --install --no-scan $name $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix sudo -H softwareupdate --install --no-scan $name $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+            else
+                $blush
+                $logprefix echo "No application names $name installed." | $logcattee | $logsuffix
+                $reset
 
-            # did you mean
-            dym=`$installed | sed "s/.app//" | grep $arg_pkg | xargs | sed "s/ /, /g"`
-            if [[ -nz $dym ]] ; then
-                $logprefix echo "Did you mean any of the following applications: $dym?" | $logcattee | $logsuffix
-            fi
-        fi ;;
-esac
+                # did you mean
+                dym=`$installed | sed "s/.app//" | grep $name | xargs | sed "s/ /, /g"`
+                if [[ -nz $dym ]] ; then
+                    $logprefix echo "Did you mean any of the following applications: $dym?" | $logcattee | $logsuffix
+                fi
+            fi ;;
+    esac
+done
 
 
 # read /tmp/log/update.log line by line then migrate to log file

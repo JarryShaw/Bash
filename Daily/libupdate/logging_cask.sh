@@ -52,7 +52,7 @@ fi
 
 # check for oudated packages " >> $tmpfile
 echo -e "+ brew cask outdated --quiet $greedy" >> $tmpfile
-$logprefix brew cask outdated --quiet | $logcattee | $logsuffix
+$logprefix brew cask outdated --quiet $greedy | $logcattee | $logsuffix
 echo >> $tmpfile
 
 
