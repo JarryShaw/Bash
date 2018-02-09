@@ -96,7 +96,7 @@ while true ; do
         [yY]*)
             # All or Specified Packages
             case $arg_pkg in
-                "all")
+                all)
                     # parameters since fourth are outdated packages
                     for name in $arg_opkg ; do
                         $logprefix echo "+ apm upgrade $name $verbose $quiet" | $logcattee | $logsuffix

@@ -145,7 +145,7 @@ fi
 
 # All or Specified Packages
 case $arg_pkg in
-    "all")
+    all)
         for cask in $arg_opkg ; do
             caskupdate $cask
         done ;;

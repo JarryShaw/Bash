@@ -61,7 +61,7 @@ def update_apm(args, *, file, date, retset=False):
         )
         log = set(logging.stdout.split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = shlex.split(logging.stdout.decode())
+        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'
@@ -146,7 +146,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = shlex.split(logging.stdout.decode())
+        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'
@@ -210,7 +210,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         )
         log = set(logging.stdout.decode().split())
         outdated = 'true' if logging.stdout.decode() else 'false'
-        outdated_pkgs = shlex.split(logging.stdout.decode())
+        outdated_pkgs = list(log)
     else:
         log = packages
         outdated = 'true'

@@ -112,7 +112,7 @@ function pipupdate {
     if [ -e $prefix/pip$suffix ] ; then
         # All or Specified Packages
         case $arg_pkg in
-            "all")
+            all)
                 # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
                 list=`$prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/"`
                 if [[ -nz $list ]] ; then

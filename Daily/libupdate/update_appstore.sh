@@ -78,7 +78,7 @@ fi
 
 # All or Specified Packages
 case $arg_pkg in
-    "all")
+    all)
         $logprefix echo "+ softwareupdate --install --no-scan --all $verbose $quiet" | $logcattee | $logsuffix
         $logprefix sudo -H softwareupdate --install --no-scan --all $verbose $quiet | $logcattee | $logsuffix
         $logprefix echo | $logcattee | $logsuffix ;;

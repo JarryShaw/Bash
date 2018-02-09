@@ -89,7 +89,7 @@ fi
 
 # All or Specified Packages
 case $arg_pkg in
-    "all")
+    all)
         for name in $arg_opkg ; do
             $logprefix echo "+ brew upgrade $name --cleanup $verbose $quiet" | $logcattee | $logsuffix
             $logprefix brew upgrade $name --cleanup $verbose $quiet | $logcattee | $logsuffix
