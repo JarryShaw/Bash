@@ -269,7 +269,7 @@ def main():
                 os.system(f'echo "$({green})No package updated in {name}.$({reset})"; echo ;')
 
     mode = '-*- Update Logs -*-'.center(80, ' ')
-    with open(f'/Library/Logs/Scripts/update/{logdate}.log', 'a') as logfile:
+    with open(logname, 'a') as logfile:
         logfile.write(f'\n\n{mode}\n\n')
         for mode in log:
             name = NAME.get(mode, mode)

@@ -25,16 +25,16 @@ NAME = dict(
 
 # mode actions
 MODE = dict(
-    all = lambda *args, **kwargs: libupdate.update_all(*args, **kwargs),
-    pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
-    brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
-    cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
+    all = lambda *args, **kwargs: libuninstall.uninstall_all(*args, **kwargs),
+    pip = lambda *args, **kwargs: libuninstall.uninstall_pip(*args, **kwargs),
+    brew = lambda *args, **kwargs: libuninstall.uninstall_brew(*args, **kwargs),
+    cask = lambda *args, **kwargs: libuninstall.uninstall_cask(*args, **kwargs),
 )
 
 
 # terminal commands
 python = sys.prefix             # Python version
-program = ' '.join(sys.argv))   # arguments
+program = ' '.join(sys.argv)    # arguments
 
 
 # terminal display
@@ -98,7 +98,7 @@ def get_parser():
                             'Name of packages to be uninstalled, default is null.'
                         ))
     parser_pip.add_argument('-i', '--ignore-dependencies', action='store_true',
-                        defalt=False, dest='idep', help=(
+                        default=False, dest='idep', help=(
                             'Run in irrecursive mode, i.e. ignore dependencies '
                             'of installing packages.'
                         ))
@@ -110,7 +110,7 @@ def get_parser():
                         help=(
                             'Run in verbose mode, with more information.'
                         ))
-    parser_pip.add_argument('-Y', '--yes', action='store_true', default=True,
+    parser_pip.add_argument('-Y', '--yes', action='store_true', default=False,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
@@ -126,16 +126,12 @@ def get_parser():
                         dest='package', help=(
                             'Name of packages to be uninstalled, default is null.'
                         ))
-    parser_brew.add_argument('-Y', '--yes', action='store_true', default=True,
-                        dest='yes', help=(
-                            'Yes for all selections.'
-                        ))
     parser_brew.add_argument('-f', '--force', action='store_true', default=False,
                         help=(
                             'Use "--force" when running `brew uninstall`.'
                         ))
     parser_brew.add_argument('-i', '--ignore-dependencies', action='store_true',
-                        defalt=False, dest='idep', help=(
+                        default=False, dest='idep', help=(
                             'Run in irrecursive mode, i.e. ignore dependencies '
                             'of installing packages.'
                         ))
@@ -147,7 +143,7 @@ def get_parser():
                         help=(
                             'Run in verbose mode, with more information.'
                         ))
-    parser_brew.add_argument('-Y', '--yes', action='store_true', default=True,
+    parser_brew.add_argument('-Y', '--yes', action='store_true', default=False,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
@@ -175,7 +171,7 @@ def get_parser():
                         help=(
                             'Run in verbose mode, with more information.'
                         ))
-    parser_cask.add_argument('-Y', '--yes', action='store_true', default=True,
+    parser_cask.add_argument('-Y', '--yes', action='store_true', default=False,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
@@ -184,8 +180,8 @@ def get_parser():
                         help=(
                             'Run in force mode, only for Homebrew and Caskroom.'
                         ))
-    paser.add_argument('-i', '--ignore-dependencies', action='store_true',
-                        defalt=False, dest='idep', help=(
+    parser.add_argument('-i', '--ignore-dependencies', action='store_true',
+                        default=False, dest='idep', help=(
                             'Run in irrecursive mode, only for Python and Homebrew.'
                         ))
     parser.add_argument('-q', '--quiet', action='store_true', default=False,
@@ -196,7 +192,7 @@ def get_parser():
                         help=(
                             'Run in verbose mode, with more information.'
                         ))
-    parser.add_argument('-Y', '--yes', action='store_true', default=True,
+    parser.add_argument('-Y', '--yes', action='store_true', default=False,
                         dest='yes', help=(
                             'Yes for all selections.'
                         ))
@@ -213,7 +209,7 @@ def main():
     args = parser.parse_args()
 
     pathlib.Path('/tmp/log').mkdir(parents=True, exist_ok=True)
-    pathlib.Path('/Library/Logs/Scripts/uninstall'.format(date=logdate)).mkdir(parents=True, exist_ok=True)
+    pathlib.Path('/Library/Logs/Scripts/uninstall').mkdir(parents=True, exist_ok=True)
 
     logdate = datetime.date.strftime(datetime.datetime.today(), '%y%m%d')
     logname = f'/Library/Logs/Scripts/uninstall/{logdate}.log'
@@ -240,7 +236,7 @@ def main():
                 os.system(f'echo "$({green})No package uninstalled in {name}.$({reset})"; echo ;')
 
     mode = '-*- Uninstall Logs -*-'.center(80, ' ')
-    with open(f'/Library/Logs/Scripts/update/{logdate}.log', 'a') as logfile:
+    with open(logname, 'a') as logfile:
         logfile.write(f'\n\n{mode}\n\n')
         for mode in log:
             name = NAME.get(mode, mode)

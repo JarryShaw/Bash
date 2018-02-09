@@ -1,14 +1,32 @@
 # Scripts
 
-
 Just some useful bash scripts.
 
+- [Daily](#daily)
+    * [`update`](#update)
+    * [`uninstall`](#uninstall)
+    * [`reinstall`](#reinstall)
+    * [`postinstall`](#postinstall)
+    * [`dependency`](#dependency)
 
-&nbsp;
+- [Kali](#kali)
+    * [`acccheck`](#acccheck)
+    * [`firewalk`](#firewalk)
+    * [`ident-user-enum`](#ident-user-enum)
+    * [`nutscan-unixwiz`](#nutscan-unixwiz)
+    * [`nmap`](#nmap)
+    * [`zenmap`](#zenmap)
+
+- [Others](#others)
+    * [`colour`](#colour)
+    * [`pypi`](#pypi)
+    * [`startup`](#startup)
+
+
+---------------------------------------------------------------------------------------------------
 
 
 ## Daily
-
 
 ##### `update`
 
@@ -20,9 +38,9 @@ Just some useful bash scripts.
   - `cask` -- [Caskroom](https://caskroom.github.io) applications
   - `appstore` -- Mac App Store or `softwareupdate` installed applications
 
-&emsp; You may install `update` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/update/` The global man page for `update` shows as below.
+&emsp; You may install `update` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/update/`. The global man page for `update` shows as below.
 
-```shell
+```
 $ update --help
 usage: update [-h] [-V] [-a] [-f] [-m] [-g] [-q] [-v] MODE ...
 
@@ -46,7 +64,7 @@ mode selection:
 
 &emsp; As it shows, there are five modes in total (if these commands exists). To update all packages, you may use one of commands below.
 
-```shell
+```
 $ update
 $ update -a
 $ update --all
@@ -56,7 +74,7 @@ $ update --all
 
 &emsp; [Atom](https://atom.io) provides a package manager called `apm`, i.e. "Atom Package Manager". The man page for `update apm` shows as below.
 
-```shell
+```
 $ update apm --help
 usage: update apm [-h] [-a] [-p PKG] [-q] [-v]
 
@@ -71,19 +89,19 @@ optional arguments:
   -v, --verbose         Run in verbose mode, with more information.
 ```
 
-&emsp; If arguments omits, `update apm` will update all outdated packages of Atom. And when using `-p` or `--package`, if given wrong package name, `update apm` might give a trivial "did-you-mean" correction.
+&emsp; If arguments omit, `update apm` will update all outdated packages of Atom. And when using `-p` or `--package`, if given wrong package name, `update apm` might give a trivial "did-you-mean" correction.
 
 2. `pip` -- Python packages
 
 &emsp; As there\'re all kinds and versions of Python complier, along with its `pip` package manager. Here, we support update of following ——
 
  - Python 2.7/3.6 installed through Python official disk images
- - Python 2.7/3.6 installed through `brew install python[3]`
- - PyPy 2.7/3.5 installed through `brew install pypy[3]`
+ - Python 2.7/3.6 installed through `brew install python/python3`
+ - PyPy 2.7/3.5 installed through `brew install pypy/pypy3`
 
 And the man page shows as below.
 
-```shell
+```
 $ update pip --help
 usage: update pip [-h] [-a] [-V VER] [-s] [-b] [-c] [-y] [-p PKG] [-q] [-v]
 
@@ -106,13 +124,13 @@ optional arguments:
   -v, --verbose         Run in verbose mode, with more information.
 ```
 
-&emsp; If arguments omits, `update pip` will update all outdated packages in all copies of Python. And when using `-p` or `--package`, if given wrong package name, `update pip` might give a trivial "did-you-mean" correction.
+&emsp; If arguments omit, `update pip` will update all outdated packages in all copies of Python. And when using `-p` or `--package`, if given wrong package name, `update pip` might give a trivial "did-you-mean" correction.
 
 3. `brew` -- Homebrew packages
 
-&emsp; The man page for update `update brew` shows as below.
+&emsp; The man page for `update brew` shows as below.
 
-```shell
+```
 $ update brew --help
 usage: update brew [-h] [-a] [-p PKG] [-f] [-m] [-q] [-v]
 
@@ -131,13 +149,13 @@ optional arguments:
 
 &emsp; Note that, arguments `-f` and `--force`, `-m` and `--merge` are using only for `brew update` command.
 
-&emsp; If arguments omits, `update brew` will update all outdated packages of Homebrew. And when using `-p` or `--package`, if given wrong package name, `update brew` might give a trivial "did-you-mean" correction.
+&emsp; If arguments omit, `update brew` will update all outdated packages of Homebrew. And when using `-p` or `--package`, if given wrong package name, `update brew` might give a trivial "did-you-mean" correction.
 
 4. `cask` -- Caskrooom packages
 
-&emsp; The man page for update `update cask` shows as below.
+&emsp; The man page for `update cask` shows as below.
 
-```shell
+```
 $ update cask  --help
 usage: update cask [-h] [-a] [-p PKG] [-f] [-g] [-q] [-v]
 
@@ -157,13 +175,13 @@ optional arguments:
 
 &emsp; Note that, arguments `-f` and `--force`, `-g` and `--greedy` are using only for `brew cask upgrade` command. And when latter given, `update` will directly run `brew cask upgrade --greedy`.
 
-&emsp; If arguments omits, `update cask` will update all outdated packages of Caskroom. And when using `-p` or `--package`, if given wrong package name, `update cask` might give a trivial "did-you-mean" correction.
+&emsp; If arguments omit, `update cask` will update all outdated packages of Caskroom. And when using `-p` or `--package`, if given wrong package name, `update cask` might give a trivial "did-you-mean" correction.
 
 5. `appstore` -- Mac App Store packages
 
-&emsp; The man page for update `update appstore` shows as below.
+&emsp; The man page for `update appstore` shows as below.
 
-```shell
+```
 $ update appstore --help
 usage: update appstore [-h] [-a] [-p PKG] [-q]
 
@@ -177,132 +195,138 @@ optional arguments:
   -q, --quiet           Run in quiet mode, with no output information.
 ```
 
-&emsp; If arguments omits, `update appstore` will update all outdated packages in Mac App Store or `softwareupdate`. And when using `-p` or `--package`, if given wrong package name, `update appstore` might give a trivial "did-you-mean" correction.
+&emsp; If arguments omit, `update appstore` will update all outdated packages in Mac App Store or `softwareupdate`. And when using `-p` or `--package`, if given wrong package name, `update appstore` might give a trivial "did-you-mean" correction.
 
 
 &nbsp;
 
-* `uninstall.sh`
 
-  Uninstall dependencies of certain pakages.
+##### `uninstall`
 
-  - For `Homebrew`
+&emsp; `uninstall` is a package manager written in Python 3.6 and Bash 3.2, which recursively and interactively uninstall packages installed through ——
 
-    ```shell
-    # uninstall all packages
-    $ bash uninstall.sh brew -a
+  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](pypy.org) compiler, and installed through `brew` or official disk images
+  - `brew` -- [Homebrew](https://brew.sh) packages
+  - `cask` -- [Caskroom](https://caskroom.github.io) applications
 
-    # uninstall dependencies of `package`
-    $ bash uninstall.sh brew -p package
-    ```
+&emsp; You may install `uninstall` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/uninstall/`. The global man page for `uninstall` shows as below.
 
-  - For `pip`
+```
+$ uninstall --help
+usage: uninstall [-h] [-V] [-a] [-f] [-i] [-q] [-v] [-Y] MODE ...
 
-    ```shell
-    # uninstall all packages
-    $ bash uninstall.sh pip -a
+Package Recursive Uninstall Manager
 
-    # uninstall dependencies of `package`
-    $ bash uninstall.sh pip -p package
-    ```
+optional arguments:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  -a, --all             Uninstall all packages installed through pip,
+                        Homebrew, and App Store.
+  -f, --force           Run in force mode, only for Homebrew and Caskroom.
+  -i, --ignore-dependencies
+                        Run in irrecursive mode, only for Python and Homebrew.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with more information.
+  -Y, --yes             Yes for all selections.
 
-  - For `pip3`
+mode selection:
+  MODE                  Uninstall given packages installed through a specified
+                        method, e.g.: pip, brew or cask.
+```
 
-    ```shell
-    # uninstall all packages
-    $ bash uninstall.sh pip3 -a
+&emsp; As it shows, there are three modes in total (if these commands exists). The default procedure when arguments omit is to stand alone. To uninstall all packages, you may use one of commands below.
 
-    # uninstall dependencies of `package`
-    $ bash uninstall.sh pip3 -p package
-    ```
+```
+$ update -a
+$ update --all
+```
 
-  - For `pip_pypy`
+1. `pip` -- Python packages
 
-    ```shell
-    # uninstall all packages
-    $ bash uninstall.sh pip_pypy -a
+&emsp; As there're several kinds and versions of Python complier, along wiht its `pip` package manager. Here, we support uninstall procedure in following ——
 
-    # uninstall dependencies of `package`
-    $ bash uninstall.sh pip_pypy -p package
-    ```
+ * Python 2.7/3.6 installed through Python official disk images
+ * Python 2.7/3.6 installed through `brew install python/python3`
+ * PyPy 2.7/3.5 installed through `brew install pypy/pypy3`
 
-  - For `pip_pypy3`
+&emsp; And the man page shows as below.
 
-    ```shell
-    # uninstall all packages
-    $ bash uninstall.sh pip_pypy3 -a
+```
+$ uninstall pip --help
+usage: uninstall pip [-h] [-a] [-V VER] [-s] [-b] [-c] [-y] [-p PKG] [-i] [-q]
+                     [-v] [-Y]
 
-    # uninstall dependencies of `package`
-    $ bash uninstall.sh pip_pypy3 -p package
-    ```
+Uninstall pip installed packages.
 
-    ​
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Uninstall all packages installed through pip.
+  -V VER, --version VER
+                        Indicate packages in which version of pip will be
+                        uninstalled.
+  -s, --system          Uninstall pip packages on system level, i.e. python
+                        installed through official installer.
+  -b, --brew            Uninstall pip packages on Cellar level, i.e. python
+                        installed through Homebrew.
+  -c, --cpython         Uninstall pip packages on CPython environment.
+  -y, --pypy            Uninstall pip packages on Pypy environment.
+  -p PKG, --package PKG
+                        Name of packages to be uninstalled, default is null.
+  -i, --ignore-dependencies
+                        Run in irrecursive mode, i.e. ignore dependencies of
+                        installing packages.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with more information.
+  -Y, --yes             Yes for all selections.
+```
 
-* `reinstall.sh`
+&emsp; If arguments omit, `uninstall pip` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall pip` might give a trivial “did-you-mean” correction.
 
-  Reinstall certain pakages.
+3. `brew` - Homebrew packages
 
-  ```shell
-  # reinstall all
-  $ bash reinstall.sh
-  $ bash reinstall.sh -a
+&emsp; The man page for `uninstall brew` shows as below.
 
-  # reinstall `package`
-  $ bash reinstall.sh -p package
+```
+$ uninstall brew --help
+usage: uninstall brew [-h] [-a] [-p PKG] [-f] [-i] [-q] [-v] [-Y]
 
-  # reinstall all starting from `package`
-  $ bash reinstall.sh -s package
-  ```
+Uninstall Homebrew installed packages.
 
-  ​
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Uninstall all packages installed through Homebrew.
+  -p PKG, --package PKG
+                        Name of packages to be uninstalled, default is null.
+  -f, --force           Use "--force" when running `brew uninstall`.
+  -i, --ignore-dependencies
+                        Run in irrecursive mode, i.e. ignore dependencies of
+                        installing packages.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with more information.
+  -Y, --yes             Yes for all selections.
+```
 
-* `postinstall.sh`
+&emsp; If arguments omit, `uninstall brew` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall brew` might give a trivial “did-you-mean” correction.
 
-  Postinstall certain pakages.
+4. `cask` – Caskrooom packages
 
-  ```shell
-  # postinstall all
-  $ bash postinstall.sh
-  $ bash postinstall.sh -a
+&emsp; The man page for `uninstall cask` shows as below.
 
-  # postinstall `package`
-  $ bash postinstall.sh -p package
+```
+$ uninstall cask --help
+usage: uninstall cask [-h] [-a] [-p PKG] [-f] [-q] [-v] [-Y]
 
-  # postinstall all starting from `package`
-  $ bash postinstall.sh -s package
-  ```
+Uninstall installed Caskroom packages.
 
-  ​
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Uninstall all packages installed through Caskroom.
+  -p PKG, --package PKG
+                        Name of packages to be uninstalled, default is null.
+  -f, --force           Use "--force" when running `brew cask uninstall`.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with more information.
+  -Y, --yes             Yes for all selections.
+```
 
-
-* `dependency.sh`
-
-  Check dependencies of certain pakages.
-
-  - For homebrew
-
-    ```shell
-    # show all dependencies
-    $ bash dependency.sh brew
-    $ bash dependency.sh brew -a
-
-    # show dependency of `package`
-    $ bash dependency.sh brew -p package
-    ```
-
-  - For pip
-
-    ```Shell
-    # show all dependencies
-    $ bash dependency.sh pip                  
-    $ bash dependency.sh pip -a
-
-    # show dependency of `package`
-    $ bash dependency.sh pip -p package
-    ```
-
-    ​
-
-* `pypi.sh`
-
-  Upload and register your `python` library into `pypi` and `pypitest`.
+&emsp; If arguments omit, `uninstall cask` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall cask` might give a trivial “did-you-mean” correction.
