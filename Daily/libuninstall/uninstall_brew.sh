@@ -1,87 +1,247 @@
 #!/bin/bash
 
 
+# clear potential terminal buffer
+sript -q /dev/null tput clear > /dev/null 2>&1
+
+
+# preset terminal output colours
+blush="tput setaf 1"    # blush / red
+green="tput setaf 2"    # green
+reset="tput sgr0"       # reset
+
+
 ################################################################################
 # Uninstall Homebrew packages.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Yes Flag
-#   4. Installed Flag
-#   5. Dependency Package
-#   ............
+#   1. Package
+#   2. Force Flag
+#   3. Quiet Flag
+#   4. Verbose Flag
+#   5. Log Date
+#   6. Ignore-Dependencies Flag
+#   7. Yes Flag
 ################################################################################
 
 
+# parameter assignment
+arg_pkg=$1
+arg_f=$2
+arg_q=$3
+arg_v=$4
+logdate=$5
+arg_i=$6
+arg_Y=$7
+
+
+# log file prepare
+logfile="/Library/Logs/Scripts/update/$logdate.log"
+tmpfile="/tmp/log/update.log"
+
+
+# remove /tmp/log/update.log
+rm -f $tmpfile
+
+
+# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+touch $logfile
+touch $tmpfile
+
+
+# log current status
+echo "- /bin/bash $0 $@" >> $tmpfile
+
+
+# log commands
+# usage: $logprefix [command] | logcattee | logsuffix
+logprefix="script -q /dev/null"
+logcattee="tee -a $tmpfile"
+if ( $arg_q ) ; then
+    logsuffix="grep '.*'"
+else
+    logsuffix="grep -v '.*'"
+fi
+
+
 # brew fix missing function usage
-#   brew_fixmissing set/: [--quiet] packages
+#   brew_fixmissing packages
 function brew_fixmissing {
-    quiet=$1
+    # parameter assignment
+    local arg_pkg=${*:1}
 
     # reinstall missing packages
-    for $name in ${*:3} ; do
-        ( $quiet; brew install $name $2; )
-        if [[ -z $2 ]] ; then
-            echo ;
-        fi
+    for $name in $arg_pkg ; do
+        echo -e "+ brew install $name $force $verbose $quiet" >> $tmpfile
+        $logprefix brew install $name $force $verbose $quiet | $logcattee | $logsuffix
+        echo >> $tmpfile
     done
 
     # inform if missing packages fixed
-    if [[ -z $2 ]] ; then
-        echo "${green}All missing packages installed.${reset}"
-    fi
+    $green
+    $logprefix echo "All missing packages installed." | $logcattee | $logsuffix
+    $reset
 }
 
 
-# Preset Terminal Output Colours
-red=`tput setaf 1`      # red
-green=`tput setaf 2`    # green
-color=`tput setaf 14`   # blue
-reset=`tput sgr0`       # reset
-
-
-# if quiet flag not set
-if [[ -z $1 ]] ; then
-    echo "-*- ${color}Homebrew${reset} -*-"
-    echo ;
-    if ( ! $3 ) ; then
-        echo "${red}No package names $4 installed.${reset}"
-        exit 0
-    fi
-    quiet="set -x"
+# if quiet flag set
+if ( $arg_q ) ; then
+    quiet="--quiet"
 else
-    quiet=":"
+    quiet=""
 fi
 
 
-# uninstall all dependency packages
-for name in ${*:4} ; do
-    ( $quiet; brew uninstall --force --ignore-dependencies $name $1; )
-    if [[ -z $1 ]] ; then
-        echo ;
-    fi
-done
+# if verbose flag set
+if ( $arg_v ) ; then
+    verbose="--verbose"
+else
+    verbose=""
+fi
 
 
-# fix missing brew dependencies
-miss=`brew missing | sed "s/.*: \(.*\)*/\1/" | sort -u | xargs`
-if [[ -nz $miss ]] ; then
-    echo "Required packages found missing: ${red}${miss}${reset}"
-    if ( $2 ) ; then
-        brew_fixmissing $quiet $1 $miss
+# if force flag set
+if ( $arg_f ) ; then
+    force="--force"
+else
+    force=""
+fi
+
+
+# uninstall all requested packages
+case $arg_pkg in
+    all)
+        list=`brew list -1`
+        for name in $list; do
+            echo -e "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" >> $tmpfile
+            $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+            echo >> $tmpfile
+        done ;;
+    *)
+        # check if package installed
+        if brew list --versions $arg_pkg > /dev/null ; then
+            # along with dependencies or not
+            if ( $arg_i ) ; then
+                echo -e "+ brew uninstall $arg_pkg --ignore-dependencies $force $verbose $quiet" >> $tmpfile
+                $logprefix brew uninstall $arg_pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                echo >> $tmpfile
+            else
+                list=`brew deps $arg_pkg`
+                for name in $list; do
+                    echo -e "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" >> $tmpfile
+                    $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                    echo >> $tmpfile
+                done
+            fi
+
+            # fix missing brew dependencies
+            miss=`brew missing | sed "s/.*: \(.*\)*/\1/" | sort -u | xargs`
+            if [[ -nz $miss ]] ; then
+                $logprefix echo "Required packages found missing: ${blush}${miss}${reset}" | $logcattee | $logsuffix
+                if ( $arg_Y ) ; then
+                    brew_fixmissing $miss
+                else
+                    while true ; do
+                        read -p "Would you like to fix? (y/N)" yn
+                        case $yn in
+                            [Yy]* )
+                                brew_fixmissing $miss
+                                break ;;
+                            [Nn]* )
+                                $blush
+                                $logprefix echo "Missing packages remained." | $logcattee | $logsuffix
+                                $reset
+                                break ;;
+                            * )
+                                echo "Invalid choice." ;;
+                        esac
+                    done
+                fi
+            fi
+        else
+            $blush
+            $logprefix echo "No available formula with the name $arg_pkg." | $logcattee | $logsuffix
+            $reset
+
+            # did you mean
+            dym=`brew list -1 | grep $arg_pkg | xargs | sed "s/ /, /g"`
+            if [[ -nz $dym ]] ; then
+                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+            fi
+            echo >> $tmpfile
+        fi ;;
+esac
+
+
+# read /tmp/log/uninstall.log line by line then migrate to log file
+while read -r line ; do
+    # plus `+` proceeds in line
+    if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
+        # add "+" in the beginning, then write to /Library/Logs/Scripts/uninstall/logdate.log
+        echo "+$line" >> $logfile
+    # minus `-` proceeds in line
+    elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
+        # replace "-" with "+", then write to /Library/Logs/Scripts/uninstall/logdate.log
+        echo "$line" | sed "y/-/+/" >> $logfile
+    # colon `:` in line
+    elif [[ $line =~ ^([[:alnum:]][[:alnum:]]*)(:)(.*)$ ]] ; then
+        # if this is a warning
+        if [[ $( tr "[:upper:]" "[:lower:]" <<< $line ) =~ ^([[:alnum:]][[:alnum:]]*:\ )(.*)(warning:\ )(.*) ]] ; then
+            # log tag
+            prefix="WAR"
+            # log content
+            suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/warning: //"`
+        # if this is an error
+        elif [[ $( tr "[:upper:]" "[:lower:]" <<< $line ) =~ ^([[:alnum:]][[:alnum:]]*:\ )(.*)(error:\ )(.*)$ ]] ; then
+            # log tag
+            prefix="ERR"
+            # log content
+            suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/error: //"`
+        # if this is asking for password
+        elif [[ $line =~ ^(Password:)(.*) ]] ; then
+            # log tag
+            prefix="PWD"
+            # log content
+            suffix="content hidden due to security reasons"
+        # otherwise, extract its own tag
+        else
+            # log tag
+            prefix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/\(.*\)*:\ .*/\1/" | cut -c 1-3 | tr "[:lower:]" "[:upper:]"`
+            # log content
+            suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
+        fi
+        # write to /Library/Logs/Scripts/uninstall/logdate.log
+        echo "$prefix: $suffix" >> $logfile
+    # colourised `[??m` line
+    elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
+        # error (red/[31m) line
+        if [[ $line =~ ^(.*)(\[31m)(.*)$ ]] ; then
+            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
+            echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+        # warning (yellow/[33m)
+        elif [[ $line =~ ^(.*)(\[33m)(.*)$ ]] ; then
+            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
+            echo "WAR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+        # other colourised line
+        else
+            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
+            echo "INF: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
+        fi
+    # empty / blank line
+    elif [[ $line =~ ^([[:space:]]*)$ ]] ; then
+        # directlywrite to /Library/Logs/Scripts/uninstall/logdate.log
+        echo $line >> $logfile
+    # non-empty line
     else
-        while true ; do
-            read -p "Would you like to fix? (y/N)" yn
-            case $yn in
-                [Yy]* )
-                    brew_fixmissing $quiet $1 $miss
-                    break ;;
-                [Nn]* )
-                    : ;;
-                * )
-                    echo "Invalid choice." ;;
-            esac
-        done
+        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/uninstall/logdate.log
+        echo "OUT: $line" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" | sed "/##*\ \ *.*%/d" >> $logfile
     fi
-fi
+done < $tmpfile
+
+
+# remove /tmp/log/uninstall.log
+rm -f $tmpfile
+
+
+# clear potential terminal buffer
+sript -q /dev/null tput clear > /dev/null 2>&1

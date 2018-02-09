@@ -29,7 +29,6 @@ MODE = dict(
     pip = lambda *args, **kwargs: libupdate.update_pip(*args, **kwargs),
     brew = lambda *args, **kwargs: libupdate.update_brew(*args, **kwargs),
     cask = lambda *args, **kwargs: libupdate.update_cask(*args, **kwargs),
-    null = lambda *args, **kwargs: libupdate.update_null(*args, **kwargs),
 )
 
 
@@ -227,7 +226,7 @@ def main():
         for key, value in args.__dict__.items():
             logfile.write(f'ARG: {key} = {value}\n')
 
-    log = MODE.get(args.mode or 'null')(args, file=logname, date=logdate)
+    log = MODE.get(args.mode or 'all')(args, file=logname, date=logdate)
     if not args.quiet:
         os.system(f'echo "-*- $({blue})Uninstall Logs$({reset}) -*-"; echo ;')
 

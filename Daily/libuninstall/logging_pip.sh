@@ -102,7 +102,7 @@ function piplogging {
         # check dependencies for each package
         for name in $arg_pkg ; do
             case $name in
-                "all")
+                all)
                     echo -e "++ pip$pprint list --format legacy | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
                     $logprefix $prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
                     echo >> $tmpfile ;;

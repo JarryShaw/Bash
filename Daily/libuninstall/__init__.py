@@ -57,6 +57,8 @@ def uninstall_pip(args, *, file, date, retset=False):
         log = set()
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
+        with open(file, 'a') as logfile:
+            logfile.write('INF: No uninstallation performed.')
     else:
         if 'all' in packages and args.mode is None:
             system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
@@ -86,7 +88,8 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
     force = str(args.force).lower()
-    merge = str(args.merge).lower()
+    yes = str(args.yes).lower()
+    idep = str(args.idep).lower()
     packages = _merge_packages(args)
 
     if shutil.which('brew') is None:
@@ -108,25 +111,22 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
         log = set()
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
+        with open(file, 'a') as logfile:
+            logfile.write('INF: No uninstallation performed.')
     else:
-        if 'all' in packages:
-            logging = subprocess.run(
-                ['bash', 'libuninstall/logging_brew.sh', date],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            log = set(logging.stdout.decode().split())
-            outdated = 'true' if logging.stdout.decode() else 'false'
-        else:
-            log = packages
-            outdated = 'true'
+        logging = subprocess.run(
+            ['bash', 'libuninstall/logging_brew.sh', date, idep] + list(packages),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        log = set(logging.stdout.decode().split())
 
         for name in packages:
             subprocess.run(
-                ['bash', 'libuninstall/uninstall_brew.sh', name, quiet, verbose, date, outdated] + \
-                shlex.split(logging.stdout.decode())
+                ['bash', 'libuninstall/uninstall_brew.sh', name, force, quiet, verbose, date, idep, yes]
             )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(brew=log)
 
@@ -135,7 +135,6 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
     force = str(args.force).lower()
-    greedy = str(args.greedy).lower()
     packages = _merge_packages(args)
 
     testing = subprocess.run(
@@ -161,38 +160,30 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
         log = set()
         if not args.quiet:
             os.system(f'echo "$({green})No uninstallation performed.$({reset})"; echo ;')
+        with open(file, 'a') as logfile:
+            logfile.write('INF: No uninstallation performed.')
     else:
-        if 'all' in packages:
-            logging = subprocess.run(
-                ['bash', 'libuninstall/logging_cask.sh', greedy, date],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            log = set(logging.stdout.decode().split())
-            outdated = 'true' if logging.stdout.decode() else 'false'
-        else:
-            log = packages
-            outdated = 'true'
+        logging = subprocess.run(
+            ['bash', 'libuninstall/logging_cask.sh', date] + list(packages),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        log = set(logging.stdout.decode().split())
 
         for name in packages:
             subprocess.run(
-                ['sudo', '-H', 'bash', 'libuninstall/uninstall_cask.sh', name, quiet, verbose, date, force, greedy, outdated]
+                ['bash', 'libuninstall/uninstall_cask.sh', name, quiet, verbose, date, force]
             )
 
     if not args.quiet:
+        time.sleep(1)
         os.system('tput clear')
     return log if retset else dict(cask=log)
 
 
 def uninstall_all(args, *, file, date):
-    quiet = str(args.quiet).lower()
-    verbose = str(args.verbose).lower()
-
     log = dict(
         pip = uninstall_pip(args, retset=True, file=file, date=date),
         brew = uninstall_brew(args, retset=True, file=file, date=date),
         cask = uninstall_cask(args, retset=True, file=file, date=date),
     )
-
-    if not args.quiet:
-        os.system('tput clear')
     return log

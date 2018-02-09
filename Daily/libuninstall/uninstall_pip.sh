@@ -5,6 +5,12 @@
 sript -q /dev/null tput clear > /dev/null 2>&1
 
 
+# preset terminal output colours
+blush="tput setaf 1"    # blush / red
+green="tput setaf 2"    # green
+reset="tput sgr0"       # reset
+
+
 ################################################################################
 # Log Python site packages uninstallation.
 #
@@ -73,25 +79,25 @@ fi
 #   pip_fixmissing pip-prefix pip-suffix pip-pprint packages
 function pip_fixmissing {
     # parameter assignment
-    prefix=$1
-    suffix=$2
-    pprint=$3
-    arg_mpkg=${*:4}
+    local prefix=$1
+    local suffix=$2
+    local pprint=$3
+    local arg_pkg=${*:4}
 
     # log function call
     echo "+ pip_fixmissing $@" >> $tmpfile
 
     # reinstall missing packages
-    for $name in $arg_mpkg ; do
+    for $name in $arg_pkg ; do
         $logprefix echo "++ pip$pprint install $name --no-cache-dir $verbose $quiet" | $logcattee | $logsuffix
         $logprefix $prefix/pip$suffix install $name --no-cache-dir $verbose $quiet | $logcattee | $logsuffix
         $logprefix echo | $logcattee | $logsuffix
     done
 
     # inform if missing packages fixed
-    if ( ! $arg_q ) ; then
-        echo "${green}All missing pip$pprint packages installed.${reset}"
-    fi
+    $green
+    $logprefix echo "All missing pip$pprint packages installed." | $logcattee | $logsuffix
+    $reset
 }
 
 
@@ -137,7 +143,7 @@ function pipuninstall {
     if [ -e $prefix/pip$suffix ] ; then
         # All or Specified Packages
         case $arg_pkg in
-            "all")
+            all)
                 # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
                 list=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/"`
                 for name in $list ; do
@@ -213,13 +219,14 @@ function pipuninstall {
                     if [[ -nz $dym ]] ; then
                         $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
                     fi
+                    echo >> $tmpfile
                 fi ;;
         esac
 
         # fix missing package dependencies
         miss=`$prefix/pip$suffix check | sed "s/.* requires \(.*\)*, .*/\1/" | sort -u | xargs`
         if [[ -nz $miss ]] ; then
-            echo "Required packages found missing: ${red}${miss}${reset}"
+            $logprefix echo "Required packages found missing: ${blush}${miss}${reset}" | $logcattee | $logsuffix
             if ( $arg_Y ) ; then
                 pip_fixmissing $prefix $suffix $pprint $miss
             else
