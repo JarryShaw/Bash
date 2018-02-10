@@ -15,20 +15,20 @@ reset="tput sgr0"       # reset
 # Check Homebrew updates.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Outdated Flag
-#   4. Log Date
+#   1. Log Date
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Outdated Flag
 #   5. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_q=$1
-arg_v=$2
-arg_o=$3
-logdate=$4
+logdate=$1
+arg_q=$2
+arg_v=$3
+arg_o=$4
 arg_pkg=${*:5}
 
 
@@ -60,51 +60,47 @@ else
 fi
 
 
-# if quiet flag set
-if ( $arg_q ) ; then
-    quiet="--quiet"
-else
-    quiet=""
-fi
-
-
 # if no outdated packages found
 if ( ! $arg_o ) ; then
     $green
     $logprefix echo "All packages have been up-to-date." | $logcattee | $logsuffix
     $reset
-    exit 0
-fi
-
-
-# if verbose flag set
-if ( $arg_v ) ; then
-    verbose="--verbose"
 else
-    verbose=""
-fi
-
-
-# update packages
-for name in $arg_pkg ; do
-    flag=`brew list -1 | awk "/^$name$/"`
-    if [[ -nz $flag ]] ; then
-        $logprefix echo "+ brew upgrade $name --cleanup $verbose $quiet" | $logcattee | $logsuffix
-        $logprefix brew upgrade $name --cleanup $verbose $quiet | $logcattee | $logsuffix
-        $logprefix echo | $logcattee | $logsuffix
+    # if quiet flag set
+    if ( $arg_q ) ; then
+        quiet="--quiet"
     else
-        $blush
-        $logprefix echo "No package names $name installed." | $logcattee | $logsuffix
-        $reset
-
-        # did you mean
-        dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
-        if [[ -nz $dym ]] ; then
-            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-        fi
-        $logprefix echo | $logcattee | $logsuffix
+        quiet=""
     fi
-done
+
+    # if verbose flag set
+    if ( $arg_v ) ; then
+        verbose="--verbose"
+    else
+        verbose=""
+    fi
+
+    # update procedure
+    for name in $arg_pkg ; do
+        flag=`brew list -1 | awk "/^$name$/"`
+        if [[ -nz $flag ]] ; then
+            $logprefix echo "+ brew upgrade $name --cleanup $verbose $quiet" | $logcattee | $logsuffix
+            $logprefix brew upgrade $name --cleanup $verbose $quiet | $logcattee | $logsuffix
+            $logprefix echo | $logcattee | $logsuffix
+        else
+            $blush
+            $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
+            $reset
+
+            # did you mean
+            dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
+            if [[ -nz $dym ]] ; then
+                $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
+            fi
+            $logprefix echo | $logcattee | $logsuffix
+        fi
+    done
+fi
 
 
 # read /tmp/log/update.log line by line then migrate to log file

@@ -9,25 +9,25 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Log Python site packages updates.
 #
 # Parameter list:
-#   1. System Flag
-#   2. Cellar Flag
-#   3. CPython Flag
-#   4. PyPy Flag
-#   5. Version
+#   1. Log Date
+#   2. System Flag
+#   3. Cellar Flag
+#   4. CPython Flag
+#   5. PyPy Flag
+#   6. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   6. Log Date
 ################################################################################
 
 
 # parameter assignment
-arg_s=$1
-arg_b=$2
-arg_c=$3
-arg_y=$4
-arg_V=$5
-logdate=$6
+logdate=$1
+arg_s=$2
+arg_b=$3
+arg_c=$4
+arg_y=$5
+arg_V=$6
 
 
 # log file prepare

@@ -15,21 +15,21 @@ reset="tput sgr0"       # reset
 # Check software updates.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Outdated Flag
-#   4. Log Date
+#   1. Log Date
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Outdated Flag
 #   5. Package
 #       ............
 ################################################################################
 
 
 # Parameter Assignment
-arg_q=$1
-arg_v=$2
-arg_o=$3
-logdate=$4
-arg_pkg=$5
+logdate=$1
+arg_q=$2
+arg_v=$3
+arg_o=$4
+arg_pkg=${*:5}
 
 
 # log file prepare
@@ -60,51 +60,48 @@ else
 fi
 
 
-# if quiet flag set
-if ( $arg_q ) ; then
-    quiet="--quiet"
-else
-    quiet=""
-fi
-
-
 # if no outdated packages found
 if ( ! $arg_o ) ; then
     $green
     $logprefix echo "All packages have been up-to-date." | $logcattee | $logsuffix
     $reset
-    exit 0
+else
+    # if quiet flag set
+    if ( $arg_q ) ; then
+        quiet="--quiet"
+    else
+        quiet=""
+    fi
+
+    # update procedure
+    for name in $arg_pkg ; do
+        # All or Specified Packages
+        case $name in
+            all)
+                $logprefix echo "+ softwareupdate --install --no-scan --all $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix sudo -H softwareupdate --install --no-scan --all $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix ;;
+            *)
+                installed="find /Applications -path \"*Contents/_MASReceipt/receipt\" -maxdepth 4 -print | sed \"s#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##\""
+                flag=`$installed | sed "s/.app//" | awk "/^$name$/"`
+                if [[ -nz $flag ]] ; then
+                    $logprefix echo "+ softwareupdate --install --no-scan $name $verbose $quiet" | $logcattee | $logsuffix
+                    $logprefix sudo -H softwareupdate --install --no-scan $name $verbose $quiet | $logcattee | $logsuffix
+                    $logprefix echo | $logcattee | $logsuffix
+                else
+                    $blush
+                    $logprefix echo "Error: No application names $name installed." | $logcattee | $logsuffix
+                    $reset
+
+                    # did you mean
+                    dym=`$installed | sed "s/.app//" | grep $name | xargs | sed "s/ /, /g"`
+                    if [[ -nz $dym ]] ; then
+                        $logprefix echo "Did you mean any of the following applications: $dym?" | $logcattee | $logsuffix
+                    fi
+                fi ;;
+        esac
+    done
 fi
-
-
-# update packages
-for name in $arg_pkg ; do
-    # All or Specified Packages
-    case $name in
-        all)
-            $logprefix echo "+ softwareupdate --install --no-scan --all $verbose $quiet" | $logcattee | $logsuffix
-            $logprefix sudo -H softwareupdate --install --no-scan --all $verbose $quiet | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix ;;
-        *)
-            installed="find /Applications -path \"*Contents/_MASReceipt/receipt\" -maxdepth 4 -print | sed \"s#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##\""
-            flag=`$installed | sed "s/.app//" | awk "/^$name$/"`
-            if [[ -nz $flag ]] ; then
-                $logprefix echo "+ softwareupdate --install --no-scan $name $verbose $quiet" | $logcattee | $logsuffix
-                $logprefix sudo -H softwareupdate --install --no-scan $name $verbose $quiet | $logcattee | $logsuffix
-                $logprefix echo | $logcattee | $logsuffix
-            else
-                $blush
-                $logprefix echo "No application names $name installed." | $logcattee | $logsuffix
-                $reset
-
-                # did you mean
-                dym=`$installed | sed "s/.app//" | grep $name | xargs | sed "s/ /, /g"`
-                if [[ -nz $dym ]] ; then
-                    $logprefix echo "Did you mean any of the following applications: $dym?" | $logcattee | $logsuffix
-                fi
-            fi ;;
-    esac
-done
 
 
 # read /tmp/log/update.log line by line then migrate to log file

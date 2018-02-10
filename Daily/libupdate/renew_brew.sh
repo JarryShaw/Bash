@@ -9,20 +9,20 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Update global Homebrew status.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Force Flag
-#   4. Merge Flag
-#   5. Log Date
+#   1. Log Date
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Force Flag
+#   5. Merge Flag
 ################################################################################
 
 
 # parameter assignment
-arg_q=$1
-arg_v=$2
-arg_f=$3
-arg_m=$4
-logdate=$5
+logdate=$1
+arg_q=$2
+arg_v=$3
+arg_f=$4
+arg_m=$5
 
 
 # log file prepare

@@ -15,24 +15,24 @@ reset="tput sgr0"       # reset
 # Check Caskroom updates.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Force Flag
-#   4. Greedy Flag
-#   5. Outdated Flag
-#   6. Log Date
+#   1. Log Date
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Force Flag
+#   5. Greedy Flag
+#   6. Outdated Flag
 #   7. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_q=$1
-arg_v=$2
-arg_f=$3
-arg_g=$4
-arg_o=$5
-logdate=$6
+logdate=$1
+arg_q=$2
+arg_v=$3
+arg_f=$4
+arg_g=$5
+arg_o=$6
 arg_pkg=${*:7}
 
 
@@ -100,63 +100,59 @@ function caskupdate {
 }
 
 
-# if quiet flag set
-if ( $arg_q ) ; then
-    quiet="--quiet"
-else
-    quiet=""
-fi
-
-# if force flag set
-if ( $arg_f ) ; then
-    force="--force"
-else
-    force=""
-fi
-
-
 # if no outdated packages found
 if ( ! $arg_o ) ; then
     $green
     $logprefix echo "All packages have been up-to-date." | $logcattee | $logsuffix
     $reset
-    exit 0
-fi
-
-
-# if greedy flag set
-if ( $arg_g ) ; then
-    $logprefix echo "+ brew cask upgrade --greedy $force $verbose $quiet" | $logcattee | $logsuffix
-    $logprefix brew cask upgrade --greedy $verbose $forc $quiet | $logcattee | $logsuffix
-    $logprefix echo | $logcattee | $logsuffix
-    exit 0
-fi
-
-
-# if verbose flag set
-if ( $arg_v ) ; then
-    verbose="--verbose"
 else
-    verbose=""
-fi
-
-
-# update packages
-for name in $arg_pkg ; do
-    flag=`brew cask list -1 | awk "/^$name$/"`
-    if [[ -nz $flag ]] ; then
-        caskupdate $name
+    # if quiet flag set
+    if ( $arg_q ) ; then
+        quiet="--quiet"
     else
-        $logprefix echo "${blush}No cask names $name installed.${reset}" | $logcattee | $logsuffix
-
-        # did you mean
-        dym=`brew cask list -1 | grep $name | xargs | sed "s/ /, /g"`
-        if [[ -nz $dym ]] ; then
-            $logprefix echo "Did you mean any of the following casks: $dym?" | $logcattee | $logsuffix
-        fi
-        $logprefix echo | $logcattee | $logsuffix
+        quiet=""
     fi
-done
+
+    # if verbose flag set
+    if ( $arg_v ) ; then
+        verbose="--verbose"
+    else
+        verbose=""
+    fi
+
+    # if force flag set
+    if ( $arg_f ) ; then
+        force="--force"
+    else
+        force=""
+    fi
+
+    # if greedy flag set
+    if ( $arg_g ) ; then
+        $logprefix echo "+ brew cask upgrade --greedy $force $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix brew cask upgrade --greedy $verbose $forc $quiet | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    else
+        # update procedure
+        for name in $arg_pkg ; do
+            flag=`brew cask list -1 | awk "/^$name$/"`
+            if [[ -nz $flag ]] ; then
+                caskupdate $name
+            else
+                $blush
+                $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
+                $reset
+
+                # did you mean
+                dym=`brew cask list -1 | grep $name | xargs | sed "s/ /, /g"`
+                if [[ -nz $dym ]] ; then
+                    $logprefix echo "Did you mean any of the following casks: $dym?" | $logcattee | $logsuffix
+                fi
+                $logprefix echo | $logcattee | $logsuffix
+            fi
+        done
+    fi
+fi
 
 
 # read /tmp/log/update.log line by line then migrate to log file

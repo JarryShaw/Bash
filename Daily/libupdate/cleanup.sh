@@ -9,20 +9,20 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Clean up caches.
 #
 # Parameter List:
-#   1. Homebrew Flag
-#   2. Caskroom Flag
-#   3. Quiet Flag
-#   4. Verbose Flag
-#   5. Log Date
+#   1. Log Date
+#   2. Homebrew Flag
+#   3. Caskroom Flag
+#   4. Quiet Flag
+#   5. Verbose Flag
 ################################################################################
 
 
 # parameter assignment
-arg_brew=$1
-arg_cask=$2
-arg_q=$3
-arg_v=$4
-logdate=$5
+logdate=$1
+arg_brew=$2
+arg_cask=$3
+arg_q=$4
+arg_v=$5
 
 
 # log file prepare

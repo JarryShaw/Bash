@@ -15,31 +15,31 @@ reset="tput sgr0"       # reset
 # Check Python site packages updates.
 #
 # Parameter list:
-#   1. System Flag
-#   2. Cellar Flag
-#   3. CPython Flag
-#   4. PyPy Flag
-#   5. Version
+#   1. Log Date
+#   2. System Flag
+#   3. Cellar Flag
+#   4. CPython Flag
+#   5. PyPy Flag
+#   6. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   6. Quiet Flag
-#   7. Verbose Flag
-#   8. Log Date
+#   7. Quiet Flag
+#   8. Verbose Flag
 #   9. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_s=$1
-arg_b=$2
-arg_c=$3
-arg_y=$4
-arg_V=$5
-arg_q=$6
-arg_v=$7
-logdate=$8
+logdate=$1
+arg_s=$2
+arg_b=$3
+arg_c=$4
+arg_y=$5
+arg_V=$6
+arg_q=$7
+arg_v=$8
 arg_pkg=${*:9}
 
 
@@ -137,7 +137,7 @@ function pipupdate {
                         $logprefix echo | $logcattee | $logsuffix
                     else
                         $blush
-                        $logprefix echo "No pip$pprint package names $name installed." | $logcattee | $logsuffix
+                        $logprefix echo "Error: No pip$pprint package names $name installed." | $logcattee | $logsuffix
                         $reset
 
                         # did you mean

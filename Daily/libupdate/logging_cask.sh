@@ -9,14 +9,14 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Log Caskroom packages updates.
 #
 # Parameter List
-#   1. Greedy Flag
-#   2. Log Date
+#   1. Log Date
+#   2. Greedy Flag
 ################################################################################
 
 
 # parameter assignment
-arg_g=$1
-logdate=$2
+logdate=$1
+arg_g=$2
 
 
 # log file prepare
@@ -41,6 +41,7 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
 logsuffix="grep -v '.*'"
+
 
 # if greedy flag set
 if ( $arg_g ) ; then
