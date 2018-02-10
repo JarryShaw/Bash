@@ -15,33 +15,33 @@ reset=`tput sgr0`       # reset
 # Uninstall Caskroom packages.
 #
 # Parameter list:
-#   1. Quiet Flag
-#   2. Verbose Flag
-#   3. Force Flag
-#   4. Log Date
+#   1. Log Date
+#   2. Quiet Flag
+#   3. Verbose Flag
+#   4. Force Flag
 #   5. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_q=$1
-arg_v=$2
-arg_f=$3
-logdate=$4
+logdate=$1
+arg_q=$2
+arg_v=$3
+arg_f=$4
 arg_pkg=${*:5}
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/update/$logdate.log"
-tmpfile="/tmp/log/update.log"
+logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
+tmpfile="/tmp/log/uninstall.log"
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
-# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -108,7 +108,7 @@ for name in $arg_pkg ; do
                 $logprefix echo | $logcattee | $logsuffix
             else
                 $blush
-                $logprefix echo "No available formula with the name $name." | $logcattee | $logsuffix
+                $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
                 $reset
 
                 # did you mean

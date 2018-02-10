@@ -15,48 +15,48 @@ reset="tput sgr0"       # reset
 # Log Python site packages uninstallation.
 #
 # Parameter list:
-#   1. System Flag
-#   2. Cellar Flag
-#   3. CPython Flag
-#   4. PyPy Flag
-#   5. Version
+#   1. Log Date
+#   2. System Flag
+#   3. Cellar Flag
+#   4. CPython Flag
+#   5. PyPy Flag
+#   6. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   6. Quiet Flag
-#   7. Verbose Flag
-#   8. Yes Flag
-#   9. Ignore-Dependencies Flag
-#  10. Log Date
+#   7. Quiet Flag
+#   8. Verbose Flag
+#   9. Yes Flag
+#  10. Ignore-Dependencies Flag
 #  11. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_s=$1
-arg_b=$2
-arg_c=$3
-arg_y=$4
-arg_V=$5
-arg_q=$6
-arg_v=$7
-arg_Y=$8
-arg_i=$9
-logdate=$10
+logdate=$1
+arg_s=$2
+arg_b=$3
+arg_c=$4
+arg_y=$5
+arg_V=$6
+arg_q=$7
+arg_v=$8
+arg_Y=$9
+arg_i=$10
 arg_pkg=${*:11}
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/update/$logdate.log"
-tmpfile="/tmp/log/update.log"
+logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
+tmpfile="/tmp/log/uninstall.log"
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
-# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -74,6 +74,38 @@ if ( $arg_q ) ; then
 else
     logsuffix="grep -v '.*'"
 fi
+
+
+# pip uninstall function usage
+#   pipuninstall pip-suffix pip-suffix pip-pprint package
+function pipuninstall {
+    # parameter assignment
+    local prefix=$1
+    local suffix=$2
+    local pprint=$3
+    local arg_pkg=$4
+
+    # log function call
+    echo "+ pipuninstall $@" >> $tmpfile
+
+    # uninstall procedure
+    if ( $arg_i ) ; then
+        $logprefix echo "++ pip$pprint uninstall $arg_pkg --yes $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix $prefix/pip$suffix uninstall $arg_pkg --yes $verbose $quiet | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    else
+        list=`$prefix/pip$suffix show $arg_pkg | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g"`
+        for name in $arg_pkg ; do
+            # check if package installed
+            flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
+            if [[ -nz $flag ]]; then
+                $logprefix echo "++ pip$pprint uninstall $name --yes $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix $prefix/pip$suffix uninstall $name --yes $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+            fi
+        done
+    fi
+}
 
 
 # pip fix missing function usage
@@ -103,14 +135,14 @@ function pip_fixmissing {
 }
 
 
-# pip uninstall function usage:
-#   pipuninstall mode
-function pipuninstall {
+# pip logging function usage:
+#   piplogging mode
+function piplogging {
     # parameter assignment
     mode=$1
 
     # log function call
-    echo "+ pipuninstall $@" >> $tmpfile
+    echo "+ piplogging $@" >> $tmpfile
 
 
     # make prefix & suffix of pip
@@ -189,18 +221,14 @@ function pipuninstall {
                     flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
                     if [[ -nz $flag ]]; then
                         if ( $arg_Y ) ; then
-                            $logprefix echo "++ pip$pprint uninstall $name --yes $verbose $quiet" | $logcattee | $logsuffix
-                            $logprefix $prefix/pip$suffix uninstall $name --yes $verbose $quiet | $logcattee | $logsuffix
-                            $logprefix echo | $logcattee | $logsuffix
+                            pipuninstall $prefix $suffix $pprint $name
                         else
                             while true ; do
                                 # ask for confirmation
                                 read -p "Would you like to uninstall $name? (y/N)" yn
                                 case $yn in
                                     [Yy]*)
-                                        $logprefix echo "++ pip$pprint uninstall $name --yes $verbose $quiet" | $logcattee | $logsuffix
-                                        $logprefix $prefix/pip$suffix uninstall $name --yes $verbose $quiet | $logcattee | $logsuffix
-                                        $logprefix echo | $logcattee | $logsuffix
+                                        pipuninstall $prefix $suffix $pprint $name
                                         break ;;
                                     [Nn]*)
                                         $blush
@@ -214,7 +242,7 @@ function pipuninstall {
                         fi
                     else
                         $blush
-                        $logprefix echo "No pip$pprint package names $name installed." | $logcattee | $logsuffix
+                        $logprefix echo "Error: No pip$pprint package names $name installed." | $logcattee | $logsuffix
                         $reset
 
                         # did you mean
@@ -257,6 +285,22 @@ function pipuninstall {
 }
 
 
+# if quiet flag set
+if ( $arg_q ) ; then
+    quiet="--quiet"
+else
+    quiet=""
+fi
+
+
+# if verbose flag set
+if ( $arg_v ) ; then
+    verbose="--verbose"
+else
+    verbose=""
+fi
+
+
 # preset all mode bools
 mode_pip_sys=false      # 2.* / system / cpython
 mode_pip_sys3=false     # 3.* / system / cpython
@@ -264,11 +308,6 @@ mode_pip=false          # 2.* / cellar / cpython
 mode_pip3=false         # 3.* / cellar / cpython
 mode_pip_pypy=false     # 2.* / cellar / pypy
 mode_pip_pypy3=false    # 3.* / cellar / pypy
-
-
-# if ignore-dependencies flag set
-if ( $arg_i ) ; then
-    echo
 
 
 # if system flag set

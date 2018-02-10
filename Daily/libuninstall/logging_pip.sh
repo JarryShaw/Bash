@@ -9,42 +9,42 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 # Log Python site packages uninstall dependencies.
 #
 # Parameter list:
-#   1. System Flag
-#   2. Cellar Flag
-#   3. CPython Flag
-#   4. PyPy Flag
-#   5. Version
+#   1. Log Date
+#   2. System Flag
+#   3. Cellar Flag
+#   4. CPython Flag
+#   5. PyPy Flag
+#   6. Version
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   6. Ignore-Dependencies Flag
-#   7. Log Date
-#   8. Uninstalling Package
+#   7. Ignore-Dependencies Flag
+#   8. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_s=$1
-arg_b=$2
-arg_c=$3
-arg_y=$4
-arg_V=$5
-arg_i=$6
-logdate=$7
+logdate=$1
+arg_s=$2
+arg_b=$3
+arg_c=$4
+arg_y=$5
+arg_V=$6
+arg_i=$7
 arg_pkg=${*:8}
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/update/$logdate.log"
-tmpfile="/tmp/log/update.log"
+logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
+tmpfile="/tmp/log/uninstall.log"
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
-# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -107,15 +107,20 @@ function piplogging {
                     $logprefix $prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
                     echo >> $tmpfile ;;
                 *)
-                    if ( $arg_i ) ; then
-                        echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
-                        $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
-                        echo >> $tmpfile
+                    # check if package installed
+                    flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
+                    if [[ -nz $flag ]]; then
+                        if ( $arg_i ) ; then
+                            echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
+                            $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
+                            echo >> $tmpfile
+                        else
+                            echo -e "++ pip$pprint show $name | grep \"Requires: \" | sed \"s/Requires: //\" | sed \"s/,//g\"" >> $tmpfile
+                            $logprefix $prefix/pip$suffix show $name | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g" | $logcattee | $logsuffix
+                            echo >> $tmpfile ;;
+                        fi
                     else
-                        echo -e "++ pip$pprint show $name | grep \"Requires: \" | sed \"s/Requires: //\" | sed \"s/,//g\"" >> $tmpfile
-                        $logprefix $prefix/pip$suffix show $name | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g" | $logcattee | $logsuffix
-                        echo >> $tmpfile ;;
-                    fi
+                        echo -e "Error: No pip$pprint package names $name installed.\n" >> $tmpfile
             esac
         done
     else
@@ -194,15 +199,15 @@ for index in ${!list[*]} ; do
 done
 
 
-# read /tmp/log/update.log line by line then migrate to log file
+# read /tmp/log/uninstall.log line by line then migrate to log file
 while read -r line ; do
     # plus `+` proceeds in line
     if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
-        # add "+" in the beginning, then write to /Library/Logs/Scripts/update/logdate.log
+        # add "+" in the beginning, then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "+$line" >> $logfile
     # minus `-` proceeds in line
     elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
-        # replace "-" with "+", then write to /Library/Logs/Scripts/update/logdate.log
+        # replace "-" with "+", then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "$line" | sed "y/-/+/" >> $logfile
     # colon `:` in line
     elif [[ $line =~ ^([[:alnum:]][[:alnum:]]*)(:)(.*)$ ]] ; then
@@ -231,36 +236,36 @@ while read -r line ; do
             # log content
             suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
         fi
-        # write to /Library/Logs/Scripts/update/logdate.log
+        # write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "$prefix: $suffix" >> $logfile
     # colourised `[??m` line
     elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
         # error (red/[31m) line
         if [[ $line =~ ^(.*)(\[31m)(.*)$ ]] ; then
-            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # warning (yellow/[33m)
         elif [[ $line =~ ^(.*)(\[33m)(.*)$ ]] ; then
-            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "WAR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # other colourised line
         else
-            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "INF: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         fi
     # empty / blank line
     elif [[ $line =~ ^([[:space:]]*)$ ]] ; then
-        # directlywrite to /Library/Logs/Scripts/update/logdate.log
+        # directlywrite to /Library/Logs/Scripts/uninstall/logdate.log
         echo $line >> $logfile
     # non-empty line
     else
-        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/update/logdate.log
+        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "OUT: $line" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" | sed "/##*\ \ *.*%/d" >> $logfile
     fi
 done < $tmpfile
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 

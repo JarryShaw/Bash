@@ -15,37 +15,37 @@ reset="tput sgr0"       # reset
 # Uninstall Homebrew packages.
 #
 # Parameter list:
-#   1. Force Flag
-#   2. Quiet Flag
-#   3. Verbose Flag
-#   4. Ignore-Dependencies Flag
-#   5. Yes Flag
-#   6. Log Date
+#   1. Log Date
+#   2. Force Flag
+#   3. Quiet Flag
+#   4. Verbose Flag
+#   5. Ignore-Dependencies Flag
+#   6. Yes Flag
 #   7. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
-arg_f=$1
-arg_q=$2
-arg_v=$3
-arg_i=$4
-arg_Y=$5
-logdate=$6
+logdate=$1
+arg_f=$2
+arg_q=$3
+arg_v=$4
+arg_i=$5
+arg_Y=$6
 arg_pkg=${*:7}
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/update/$logdate.log"
-tmpfile="/tmp/log/update.log"
+logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
+tmpfile="/tmp/log/uninstall.log"
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
-# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -110,7 +110,7 @@ else
 fi
 
 
-# uninstall all requested packages
+# uninstall procedure
 for name in $arg_pkg ; do
     case $name in
         all)
@@ -131,14 +131,17 @@ for name in $arg_pkg ; do
                 else
                     list=`brew deps $name`
                     for pkg in $list; do
-                        $logprefix echo "+ brew uninstall $pkg --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
-                        $logprefix brew uninstall $pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
-                        $logprefix echo | $logcattee | $logsuffix
+                        # check if package installed
+                        if brew list --versions $pkg > /dev/null ; then
+                            $logprefix echo "+ brew uninstall $pkg --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
+                            $logprefix brew uninstall $pkg --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                            $logprefix echo | $logcattee | $logsuffix
+                        fi
                     done
                 fi
             else
                 $blush
-                $logprefix echo "No available formula with the name $name." | $logcattee | $logsuffix
+                $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
                 $reset
 
                 # did you mean

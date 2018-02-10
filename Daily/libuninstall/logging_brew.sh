@@ -23,15 +23,15 @@ arg_pkg=${*:3}
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/update/$logdate.log"
-tmpfile="/tmp/log/update.log"
+logfile="/Library/Logs/Scripts/uninstall/$logdate.log"
+tmpfile="/tmp/log/uninstall.log"
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
-# create /tmp/log/update.log & /Library/Logs/Scripts/update/logdate.log
+# create /tmp/log/uninstall.log & /Library/Logs/Scripts/uninstall/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -73,15 +73,15 @@ for name in $arg_pkg; do
 done
 
 
-# read /tmp/log/update.log line by line then migrate to log file
+# read /tmp/log/uninstall.log line by line then migrate to log file
 while read -r line ; do
     # plus `+` proceeds in line
     if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
-        # add "+" in the beginning, then write to /Library/Logs/Scripts/update/logdate.log
+        # add "+" in the beginning, then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "+$line" >> $logfile
     # minus `-` proceeds in line
     elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
-        # replace "-" with "+", then write to /Library/Logs/Scripts/update/logdate.log
+        # replace "-" with "+", then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "$line" | sed "y/-/+/" >> $logfile
     # colon `:` in line
     elif [[ $line =~ ^([[:alnum:]][[:alnum:]]*)(:)(.*)$ ]] ; then
@@ -110,36 +110,36 @@ while read -r line ; do
             # log content
             suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
         fi
-        # write to /Library/Logs/Scripts/update/logdate.log
+        # write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "$prefix: $suffix" >> $logfile
     # colourised `[??m` line
     elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
         # error (red/[31m) line
         if [[ $line =~ ^(.*)(\[31m)(.*)$ ]] ; then
-            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # warning (yellow/[33m)
         elif [[ $line =~ ^(.*)(\[33m)(.*)$ ]] ; then
-            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "WAR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # other colourised line
         else
-            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/update/logdate.log
+            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/uninstall/logdate.log
             echo "INF: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         fi
     # empty / blank line
     elif [[ $line =~ ^([[:space:]]*)$ ]] ; then
-        # directlywrite to /Library/Logs/Scripts/update/logdate.log
+        # directlywrite to /Library/Logs/Scripts/uninstall/logdate.log
         echo $line >> $logfile
     # non-empty line
     else
-        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/update/logdate.log
+        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/uninstall/logdate.log
         echo "OUT: $line" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" | sed "/##*\ \ *.*%/d" >> $logfile
     fi
 done < $tmpfile
 
 
-# remove /tmp/log/update.log
+# remove /tmp/log/uninstall.log
 rm -f $tmpfile
 
 
