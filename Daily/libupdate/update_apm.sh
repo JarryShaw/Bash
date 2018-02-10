@@ -94,6 +94,7 @@ else
                         $logprefix echo "+ apm upgrade $arg_pkg $verbose $quiet" | $logcattee | $logsuffix
                         $logprefix apm upgrade $arg_pkg $verbose $quiet -y | $logcattee | $logsuffix
                         $logprefix echo | $logcattee | $logsuffix
+                        break ;;
                     [nN]*)
                         $blush
                         $logprefix echo "Update procedure for ${name} declined." | $logcattee | $logsuffix

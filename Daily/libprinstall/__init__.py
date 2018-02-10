@@ -23,7 +23,7 @@ def _merge_packages(args):
     if 'package' in args and args.package:
         allflag = False
         packages = set()
-        for pkg in args.packages:
+        for pkg in args.package:
             if allflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
@@ -31,8 +31,10 @@ def _merge_packages(args):
                     packages = {'all'}
                     allflag = True; break
                 packages = packages.union(set(list_))
-    else:
+    elif args.all:
         packages = {'all'}
+    else:
+        packages = set()
     return packages
 
 
@@ -168,8 +170,8 @@ def reinstall_all(args, *, file, date):
     verbose = str(args.verbose).lower()
 
     log = dict(
-        brew = update_brew(args, cleanup=False, retset=True, file=file, date=date),
-        cask = update_cask(args, cleanup=False, retset=True, file=file, date=date),
+        brew = reinstall_brew(args, cleanup=False, retset=True, file=file, date=date),
+        cask = reinstall_cask(args, cleanup=False, retset=True, file=file, date=date),
     )
 
     mode = '-*- Cleanup -*-'.center(80, ' ')
@@ -194,7 +196,6 @@ def reinstall_all(args, *, file, date):
 def postinstall(args, *, file, date, cleanup=True):
     quiet = str(args.quiet).lower()
     verbose = str(args.verbose).lower()
-    force = str(args.force).lower()
     start = str(args.start).lower()
     end = str(args.end).lower()
     packages = _merge_packages(args)
@@ -219,7 +220,7 @@ def postinstall(args, *, file, date, cleanup=True):
             ['bash', 'libprinstall/logging_brew.sh', date, 'postinstall', start, end],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        log = set(logging.stdout.decode().split())
+        log = set(logging.stdout.replace(b'\x1b', b'').decode().split())
     else:
         log = packages
 

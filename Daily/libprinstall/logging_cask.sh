@@ -51,9 +51,9 @@ logsuffix="grep -v '.*'"
 case $arg_s in
     none)
         # perl -CA -le "print chr shift" 64
-        start="@"       # ASCII 64 (A - 65)
+        start="@" ;;    # ASCII 64 (A - 65)
     *)
-        start=$arg_s
+        start=$arg_s ;;
 esac
 
 
@@ -61,9 +61,9 @@ esac
 case $arg_e in
     none)
         # perl -CA -le "print chr shift" 123
-        end="{"         # ASCII 123 (z - 122)
+        end="{" ;;      # ASCII 123 (z - 122)
     *)
-        end=$arg_e
+        end=$arg_e ;;
 esac
 
 

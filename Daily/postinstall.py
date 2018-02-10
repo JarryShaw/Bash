@@ -15,13 +15,27 @@ import sys
 __version__ = '0.3.0'
 
 
+# terminal commands
+python = sys.prefix             # Python version
+program = ' '.join(sys.argv)    # arguments
+
+
+# terminal display
+red = 'tput setaf 1'    # blush / red
+green = 'tput setaf 2'  # green
+blue = 'tput setaf 14'  # blue
+bold = 'tput bold'      # bold
+under = 'tput smul'     # underline
+reset = 'tput sgr0'     # reset
+
+
 def get_parser():
     parser = argparse.ArgumentParser(prog='postinstall', description=(
         'Homebrew Package Postinstall Manager'
     ))
     parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(__version__))
-    parser.add_argument('-a', '--all', action='store_true', default=False,
+    parser.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
                             'Postinstall all packages installed through Homebrew.'
                         ))
@@ -73,13 +87,13 @@ def main():
         for key, value in args.__dict__.items():
             logfile.write(f'ARG: {key} = {value}\n')
 
-    log = MODE.get(args.mode or 'all')(args, file=logname, date=logdate)
+    log = libprinstall.postinstall(args, file=logname, date=logdate)
     if not args.quiet:
         os.system(f'echo "-*- $({blue})Postinstall Logs$({reset}) -*-"; echo ;')
 
         if log and all(log):
             pkgs = ', '.join(log)
-            os.system(f'echo "Postinstalled following Homebrew packages: $({red}){pkgs}$({reset}){comment}."; echo ;')
+            os.system(f'echo "Postinstalled following Homebrew packages: $({red}){pkgs}$({reset})."; echo ;')
         else:
             os.system(f'echo "$({green})No package postinstalled in Homebrew.$({reset})"; echo ;')
 
@@ -88,7 +102,7 @@ def main():
         logfile.write(f'\n\n{mode}\n\n')
         if log and all(log):
             pkgs = ', '.join(log)
-            logfile.write(f'LOG: Postinstalled following Homebrew packages: {pkgs}{comment}.\n')
+            logfile.write(f'LOG: Postinstalled following Homebrew packages: {pkgs}.\n')
         else:
             logfile.write(f'LOG: No package postinstalled in Homebrew.\n')
         logfile.write('\n\n\n\n')

@@ -30,6 +30,19 @@ MODE = dict(
 )
 
 
+# terminal commands
+python = sys.prefix             # Python version
+program = ' '.join(sys.argv)    # arguments
+
+
+# terminal display
+red = 'tput setaf 1'    # blush / red
+green = 'tput setaf 2'  # green
+blue = 'tput setaf 14'  # blue
+bold = 'tput bold'      # bold
+under = 'tput smul'     # underline
+reset = 'tput sgr0'     # reset
+
 
 def get_parser():
     parser = argparse.ArgumentParser(prog='reinstall', description=(
@@ -42,7 +55,7 @@ def get_parser():
                             'Reinstall all packages installed through Homebrew '
                             'and Caskroom.'
                         ))
-    parser.add_subparsers(title='mode selection', metavar='MODE',
+    subparser = parser.add_subparsers(title='mode selection', metavar='MODE',
                         dest='mode', help=(
                             'Reinstall packages installed through a '
                             'specified method, e.g.: brew or cask.'
@@ -160,7 +173,7 @@ def main():
             name = NAME.get(mode, mode)
             if log[mode] and all(log[mode]):
                 pkgs = ', '.join(log[mode])
-                os.system(f'echo "Reinstalled following {name} packages: $({red}){pkgs}$({reset}){comment}."; echo ;')
+                os.system(f'echo "Reinstalled following {name} packages: $({red}){pkgs}$({reset})."; echo ;')
             else:
                 os.system(f'echo "$({green})No package reinstalled in {name}.$({reset})"; echo ;')
 
@@ -171,7 +184,7 @@ def main():
             name = NAME.get(mode, mode)
             if log[mode] and all(log[mode]):
                 pkgs = ', '.join(log[mode])
-                logfile.write(f'LOG: Reinstalled following {name} packages: {pkgs}{comment}.\n')
+                logfile.write(f'LOG: Reinstalled following {name} packages: {pkgs}.\n')
             else:
                 logfile.write(f'LOG: No package reinstalled in {name}.\n')
         logfile.write('\n\n\n\n')
