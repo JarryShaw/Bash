@@ -5,41 +5,38 @@
 sript -q /dev/null tput clear > /dev/null 2>&1
 
 
-# Preset Terminal Output Colours
-blush="tput setaf 1"    # blush / red
-green="tput setaf 2"    # green
-reset="tput sgr0"       # reset
-
-
 ################################################################################
-# Postinstall Homebrew packages.
+# Clean up caches.
 #
-# Parameter list:
+# Parameter List:
 #   1. Log Date
-#   2. Quiet Flag
-#   3. Verbose Flag
-#   4. Package
-#       ............
+#   2. Log Mode
+#   3. Homebrew Flag
+#   4. Caskroom Flag
+#   5. Quiet Flag
+#   6. Verbose Flag
 ################################################################################
 
 
 # parameter assignment
 logdate=$1
-arg_q=$2
-arg_v=$3
-arg_pkg=${*:4}
+logmode=$2
+arg_brew=$3
+arg_cask=$4
+arg_q=$5
+arg_v=$6
 
 
 # log file prepare
-logfile="/Library/Logs/Scripts/postinstall/$logdate.log"
-tmpfile="/tmp/log/postinstall.log"
+logfile="/Library/Logs/Scripts/$logmode/$logdate.log"
+tmpfile="/tmp/log/$logmode.log"
 
 
-# remove /tmp/log/postinstall.log
+# remove /tmp/log/logmode.log
 rm -f $tmpfile
 
 
-# create /tmp/log/postinstall.log & /Library/Logs/Scripts/postinstall/logdate.log
+# create /tmp/log/logmode.log & /Library/Logs/Scripts/logmode/logdate.log
 touch $logfile
 touch $tmpfile
 
@@ -61,50 +58,63 @@ fi
 # if quiet flag set
 if ( $arg_q ) ; then
     quiet="--quiet"
+    cmd_q="-q"
 else
     quiet=""
+    cmd_q=""
 fi
 
 
-# if verbose flag set
+# if verbose flag not set
 if ( $arg_v ) ; then
     verbose="--verbose"
+    cmd_v="-v"
 else
     verbose=""
+    cmd_v=""
 fi
 
 
-# postinstall procedure
-for name in $arg_pkg ; do
-    flag=`brew list -1 | awk "/^$name$/"`
-    if [[ -nz $flag ]] ; then
-        $logprefix echo "+ brew postinstall $name $verbose $quiet" | $logcattee | $logsuffix
-        $logprefix brew postinstall $name $verbose $quiet | $logcattee | $logsuffix
-        $logprefix echo | $logcattee | $logsuffix
-    else
-        $blush
-        $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
-        $reset
+# brew prune
+$logprefix echo "+ brew prune $verbose $quiet" | $logcattee | $logsuffix
+$logprefix brew prune $verbose $quiet | $logcattee | $logsuffix
+$logprefix echo | $logcattee | $logsuffix
 
-        # did you mean
-        dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
-        if [[ -nz $dym ]] ; then
-            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-        fi
+
+# archive caches if hard disk attached
+if [ -e /Volumes/Jarry\ Shaw/ ] ; then
+    # check if cache directory exists
+    if [ -e $(brew --cache) ] ; then
+        # move caches
+        $logprefix echo "+ cp -rf cache archive $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix cp -rf $cmd_v $(brew --cache) /Volumes/Jarry\ Shaw/Developers/ | $logcattee | $logsuffix
         $logprefix echo | $logcattee | $logsuffix
     fi
-done
+
+    # if cask flag set
+    if ( $arg_cask ) ; then
+        $logprefix echo "+ brew cask cleanup $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix brew cask cleanup $verbose | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    fi
+
+    # if brew flag set
+    if ( $arg_brew ) ; then
+        $logprefix echo "+ brew cleanup $verbose $quiet" | $logcattee | $logsuffix
+        $logprefix rm -rf $cmd_v $( brew --cache ) | $logcattee | $logsuffix
+        $logprefix echo | $logcattee | $logsuffix
+    fi
+fi
 
 
-# read /tmp/log/postinstall.log line by line then migrate to log file
 while read -r line ; do
     # plus `+` proceeds in line
     if [[ $line =~ ^(\+\+*\ )(.*)$ ]] ; then
-        # add "+" in the beginning, then write to /Library/Logs/Scripts/postinstall/logdate.log
+        # add "+" in the beginning, then write to /Library/Logs/Scripts/logmode/logdate.log
         echo "+$line" >> $logfile
     # minus `-` proceeds in line
     elif [[ $line =~ ^(-\ )(.*)$ ]] ; then
-        # replace "-" with "+", then write to /Library/Logs/Scripts/postinstall/logdate.log
+        # replace "-" with "+", then write to /Library/Logs/Scripts/logmode/logdate.log
         echo "$line" | sed "y/-/+/" >> $logfile
     # colon `:` in line
     elif [[ $line =~ ^([[:alnum:]][[:alnum:]]*)(:)(.*)$ ]] ; then
@@ -133,36 +143,36 @@ while read -r line ; do
             # log content
             suffix=`echo $line | sed "s/\[[0-9][0-9]*m//g" | sed "s/.*:\ \(.*\)*.*/\1/"`
         fi
-        # write to /Library/Logs/Scripts/postinstall/logdate.log
+        # write to /Library/Logs/Scripts/logmode/logdate.log
         echo "$prefix: $suffix" >> $logfile
     # colourised `[??m` line
     elif [[ $line =~ ^(.*)(\[[0-9][0-9]*m)(.*)$ ]] ; then
         # error (red/[31m) line
         if [[ $line =~ ^(.*)(\[31m)(.*)$ ]] ; then
-            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/postinstall/logdate.log
+            # add `ERR` tag and remove special characters then write to /Library/Logs/Scripts/logmode/logdate.log
             echo "ERR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # warning (yellow/[33m)
         elif [[ $line =~ ^(.*)(\[33m)(.*)$ ]] ; then
-            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/postinstall/logdate.log
+            # add `WAR` tag and remove special characters then write to /Library/Logs/Scripts/logmode/logdate.log
             echo "WAR: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         # other colourised line
         else
-            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/postinstall/logdate.log
+            # add `INF` tag and remove special characters then write to /Library/Logs/Scripts/logmode/logdate.log
             echo "INF: $line" | sed "s/\[[0-9][0-9]*m//g" >> $logfile
         fi
     # empty / blank line
     elif [[ $line =~ ^([[:space:]]*)$ ]] ; then
-        # directlywrite to /Library/Logs/Scripts/postinstall/logdate.log
+        # directlywrite to /Library/Logs/Scripts/logmode/logdate.log
         echo $line >> $logfile
     # non-empty line
     else
-        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/postinstall/logdate.log
+        # add `OUT` tag, remove special characters and discard flushed lines then write to /Library/Logs/Scripts/logmode/logdate.log
         echo "OUT: $line" | sed "s/\[\?[0-9][0-9]*[a-zA-Z]//g" | sed "/\[[A-Z]/d" | sed "/##*\ \ *.*%/d" >> $logfile
     fi
 done < $tmpfile
 
 
-# remove /tmp/log/postinstall.log
+# remove /tmp/log/logmode.log
 rm -f $tmpfile
 
 
