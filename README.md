@@ -19,8 +19,8 @@ Just some useful bash scripts.
     * [`postinstall`](#postinstall)
         - [Homebrew](#postinstall_brew)
     * [`dependency`](#dependency)
-        - [Python](#pip)
-        - [Homebrew](#brew)
+        - [Python](#dependency_pip)
+        - [Homebrew](#dependency_brew)
 
 - [Kali Scripts](#kali)
     * [`acccheck`](#acccheck)
@@ -518,6 +518,105 @@ $ postinstall --all
 <a name="postinstall_brew"> </a>
 
 &emsp; If arguments omit, `postinstall` will postinstall all installed packages of Homebrew. And when using `-p` or `--package`, if given wrong package name, `postinstall` might give a trivial "did-you-mean" correction.
+
+<a name="dependency"> </a>
+
+##### `dependency`
+
+&nbsp; `dependency` is a package manager written in Python 3.6 and Bash 3.2, which automatically and interactively show dependencies of packages installed through ——
+
+  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](pypy.org) compiler, and installed through `brew` or official disk images
+  - `brew` -- [Homebrew](https://brew.sh) packages
+
+&emsp; You may install `dependency` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/dependency/`. The global man page for `dependency` shows as below.
+
+```
+$ dependency --help
+usage: dependency [-h] [-V] [-a] [-t] MODE ...
+
+Trivial Package Dependency Manager
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -V, --version  show program's version number and exit
+  -a, --all      Show dependencies of all packages installed through pip and
+                 Homebrew.
+  -t, --tree     Show dependencies as a tree. This feature may request
+                 `pipdeptree`.
+
+mode selection:
+  MODE           Show dependencies of packages installed through a specified
+                 method, e.g.: pip or brew.
+```
+
+&emsp; As it shows, there are two mode in total (if these commands exists). The default procedure when arguments omit is to stand alone. To show dependency of all packages, you may use one of commands below.
+
+```
+$ dependency -a
+$ dependency --all
+```
+
+<a name="dependency_pip"> </a>
+
+1. `pip` -- Python packages
+
+&emsp; As there\'re all kinds and versions of Python complier, along with its `pip` package manager. Here, we support showing dependency of following ——
+
+ - Python 2.7/3.6 installed through Python official disk images
+ - Python 2.7/3.6 installed through `brew install python/python3`
+ - PyPy 2.7/3.5 installed through `brew install pypy/pypy3`
+
+And the man page shows as below.
+
+```
+$ dependency pip --help
+usage: dependency pip [-h] [-a] [-V VER] [-s] [-b] [-c] [-y] [-p PKG] [-t]
+
+Show dependencies of Python packages.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Show dependencies of all packages installed through
+                        pip.
+  -V VER, --version VER
+                        Indicate which version of pip will be updated.
+  -s, --system          Show dependencies of pip packages on system level,
+                        i.e. python installed through official installer.
+  -b, --brew            Show dependencies of pip packages on Cellar level,
+                        i.e. python installed through Homebrew.
+  -c, --cpython         Show dependencies of pip packages on CPython
+                        environment.
+  -y, --pypy            Show dependencies of pip packages on PyPy environment.
+  -p PKG, --package PKG
+                        Name of packages to be shown, default is all.
+  -t, --tree            Show dependencies as a tree. This feature requests
+                        `pipdeptree`.
+```
+
+&emsp; If arguments omit, `dependency pip` will stand alone, and do nothing. To show dependency of all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `dependency pip` might give a trivial “did-you-mean” correction.
+
+<a name="dependency_brew"> </a>
+
+2. `brew` – Homebrew packages
+
+&emsp; The man page for `dependency brew` shows as below.
+
+```
+$ dependency brew --help
+usage: dependency brew [-h] [-a] [-p PKG] [-t]
+
+Show dependencies of Homebrew packages.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Show dependencies of all packages installed through
+                        Homebrew.
+  -p PKG, --package PKG
+                        Name of packages to be shown, default is all.
+  -t, --tree            Show dependencies as a tree.
+```
+
+&emsp; If arguments omit, `dependency brew` will stand alone, and do nothing. To show dependency of all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `dependency brew` might give a trivial “did-you-mean” correction.
 
 &nbsp;
 
