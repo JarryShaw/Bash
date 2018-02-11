@@ -12,7 +12,7 @@ import sys
 
 
 # version string
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 
 # display mode names
@@ -45,7 +45,7 @@ reset = 'tput sgr0'     # reset
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(prog='reinstall', description=(
+    parser = argparse.ArgumentParser(prog='dependency', description=(
         'Trivial Package Dependency Manager'
     ))
     parser.add_argument('-V', '--version', action='version',
