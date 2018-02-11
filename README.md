@@ -4,18 +4,23 @@ Just some useful bash scripts.
 
 - [Daily Utilities](#daily)
     * [`update`](#update)
-        - [Atom](#apm)
-        - [Python](#pip)
-        - [Homebrew](#brew)
-        - [Caskroom](#cask)
-        - [App Store](#apptore)
+        - [Atom](#update_apm)
+        - [Python](#update_pip)
+        - [Homebrew](#update_brew)
+        - [Caskroom](#update_cask)
+        - [App Store](#update_apptore)
     * [`uninstall`](#uninstall)
+        - [Python](#uninstall_pip)
+        - [Homebrew](#uninstall_brew)
+        - [Caskroom](#uninstall_cask)
+    * [`reinstall`](#reinstall)
+        - [Homebrew](#reinstall_brew)
+        - [Caskroom](#reinstall_cask)
+    * [`postinstall`](#postinstall)
+        - [Homebrew](#postinstall_brew)
+    * [`dependency`](#dependency)
         - [Python](#pip)
         - [Homebrew](#brew)
-        - [Caskroom](#cask)
-    * [`reinstall`](#reinstall)
-    * [`postinstall`](#postinstall)
-    * [`dependency`](#dependency)
 
 - [Kali Scripts](#kali)
     * [`acccheck`](#acccheck)
@@ -87,7 +92,7 @@ $ update -a
 $ update --all
 ```
 
-<a name="apm"> </a>
+<a name="update_apm"> </a>
 
 1. `apm` -- Atom packages
 
@@ -110,7 +115,7 @@ optional arguments:
 
 &emsp; If arguments omit, `update apm` will update all outdated packages of Atom. And when using `-p` or `--package`, if given wrong package name, `update apm` might give a trivial "did-you-mean" correction.
 
-<a name="pip"> </a>
+<a name="update_pip"> </a>
 
 2. `pip` -- Python packages
 
@@ -147,7 +152,7 @@ optional arguments:
 
 &emsp; If arguments omit, `update pip` will update all outdated packages in all copies of Python. And when using `-p` or `--package`, if given wrong package name, `update pip` might give a trivial "did-you-mean" correction.
 
-<a name="brew"> </a>
+<a name="update_brew"> </a>
 
 3. `brew` -- Homebrew packages
 
@@ -174,7 +179,7 @@ optional arguments:
 
 &emsp; If arguments omit, `update brew` will update all outdated packages of Homebrew. And when using `-p` or `--package`, if given wrong package name, `update brew` might give a trivial "did-you-mean" correction.
 
-<a name="cask"> </a>
+<a name="update_cask"> </a>
 
 4. `cask` -- Caskrooom packages
 
@@ -202,7 +207,7 @@ optional arguments:
 
 &emsp; If arguments omit, `update cask` will update all outdated packages of Caskroom. And when using `-p` or `--package`, if given wrong package name, `update cask` might give a trivial "did-you-mean" correction.
 
-<a name="appstore"> </a>
+<a name="update_appstore"> </a>
 
 5. `appstore` -- Mac App Store packages
 
@@ -265,11 +270,11 @@ mode selection:
 &emsp; As it shows, there are three modes in total (if these commands exists). The default procedure when arguments omit is to stand alone. To uninstall all packages, you may use one of commands below.
 
 ```
-$ update -a
-$ update --all
+$ uninstall -a
+$ uninstall --all
 ```
 
-<a name="pip"> </a>
+<a name="uninstall_pip"> </a>
 
 1. `pip` -- Python packages
 
@@ -312,9 +317,9 @@ optional arguments:
 
 &emsp; If arguments omit, `uninstall pip` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall pip` might give a trivial “did-you-mean” correction.
 
-<a name="brew"> </a>
+<a name="uninstall_brew"> </a>
 
-2. `brew` - Homebrew packages
+2. `brew` – Homebrew packages
 
 &emsp; The man page for `uninstall brew` shows as below.
 
@@ -340,7 +345,7 @@ optional arguments:
 
 &emsp; If arguments omit, `uninstall brew` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall brew` might give a trivial “did-you-mean” correction.
 
-<a name="cask"> </a>
+<a name="uninstall_cask"> </a>
 
 3. `cask` – Caskrooom packages
 
@@ -364,6 +369,155 @@ optional arguments:
 ```
 
 &emsp; If arguments omit, `uninstall cask` will stand alone, and do nothing. To uninstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `uninstall cask` might give a trivial “did-you-mean” correction.
+
+&nbsp;
+
+<a name="reinstall"> </a>
+
+##### `reinstall`
+
+&emsp; `reinstall` is a package manager written in Python 3.6 and Bash 3.2, which automatically and interactively reinstall packages installed through ——
+
+  - `brew` -- [Homebrew](https://brew.sh) packages
+  - `cask` -- [Caskroom](https://caskroom.github.io) applications
+
+&emsp; You may install `reinstall` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/reinstall/`. The global man page for `reinstall` shows as below.
+
+```
+$ reinstall --help
+usage: reinstall [-h] [-V] [-a] [-s START] [-e START] [-f] [-q] [-v] MODE ...
+
+Homebrew Package Reinstall Manager
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  -a, --all             Reinstall all packages installed through Homebrew and
+                        Caskroom.
+  -s START, --startwith START
+                        Reinstall procedure starts from which package, sort in
+                        initial alphabets.
+  -e START, --endwith START
+                        Reinstall procedure ends until which package, sort in
+                        initial alphabets.
+  -f, --force           Run in force mode, using for `brew reinstall`.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with detailed output information.
+
+mode selection:
+  MODE                  Reinstall packages installed through a specified
+                        method, e.g.: brew or cask.
+```
+
+&emsp; As it shows, there are two modes in total (if these commands exists). The default procedure when arguments omit is to stand alone. To reinstall all packages, you may use one of commands below.
+
+```
+$ reinstall -a
+$ reinstall --all
+```
+
+<a name="reinstall_brew"> </a>
+
+1. `brew` – Homebrew packages
+
+&emsp; The man page for `reinstall brew` shows as below.
+
+```
+$ reinstall brew --help
+usage: reinstall brew [-h] [-p PKG] [-s START] [-e START] [-f] [-q] [-v]
+
+Reinstall Homebrew packages.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PKG, --package PKG
+                        Name of packages to be reinstalled, default is null.
+  -s START, --startwith START
+                        Reinstall procedure starts from which package, sort in
+                        initial alphabets.
+  -e START, --endwith START
+                        Reinstall procedure ends until which package, sort in
+                        initial alphabets.
+  -f, --force           Run in force mode, using for `brew reinstall`.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with detailed output information.
+```
+
+&emsp; If arguments omit, `reinstall brew` will stand alone, and do nothing. To reinstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `reinstall brew` might give a trivial “did-you-mean” correction.
+
+<a name="reinstall_cask"> </a>
+
+2. `cask` – Caskrooom packages
+
+&emsp; The man page for `reinstall cask` shows as below.
+
+```
+$ reinstall cask --help
+usage: reinstall cask [-h] [-p PKG] [-s START] [-e START] [-q] [-v]
+
+Reinstall Caskroom packages.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PKG, --package PKG
+                        Name of packages to be reinstalled, default is null.
+  -s START, --startwith START
+                        Reinstall procedure starts from which package, sort in
+                        initial alphabets.
+  -e START, --endwith START
+                        Reinstall procedure ends until which package, sort in
+                        initial alphabets.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with detailed output information.
+```
+
+&emsp; If arguments omit, `reinstall cask` will stand alone, and do nothing. To reinstall all packages, use `-a` or `--all` option. And when using `-p` or `--package`, if given wrong package name, `reinstall cask` might give a trivial “did-you-mean” correction.
+
+&nbsp;
+
+<a name="postinstall"> </a>
+
+##### `postinstall`
+
+&nbsp; `postinstall` is a package manager written in Python 3.6 and Bash 3.2, which automatically and interactively reinstall packages installed through ——
+
+  - `brew` -- [Homebrew](https://brew.sh) packages
+
+&emsp; You may install `postinstall` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/postinstall/`. The global man page for `postinstall` shows as below.
+
+```
+$ postinstall --help
+usage: postinstall [-h] [-V] [-a] [-p PKG] [-s START] [-e START] [-q] [-v]
+
+Homebrew Package Postinstall Manager
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  -a, --all             Postinstall all packages installed through Homebrew.
+  -p PKG, --package PKG
+                        Name of packages to be postinstalled, default is all.
+  -s START, --startwith START
+                        Postinstall procedure starts from which package, sort
+                        in initial alphabets.
+  -e START, --endwith START
+                        Postinstall procedure ends until which package, sort
+                        in initial alphabets.
+  -q, --quiet           Run in quiet mode, with no output information.
+  -v, --verbose         Run in verbose mode, with detailed output information.
+```
+
+&emsp; As it shows, there is only one mode in total (if these commands exists). To postinstall all packages, you may use one of commands below.
+
+```
+$ postinstall
+$ postinstall -a
+$ postinstall --all
+```
+
+<a name="postinstall_brew"> </a>
+
+&emsp; If arguments omit, `postinstall` will postinstall all installed packages of Homebrew. And when using `-p` or `--package`, if given wrong package name, `postinstall` might give a trivial "did-you-mean" correction.
 
 &nbsp;
 
