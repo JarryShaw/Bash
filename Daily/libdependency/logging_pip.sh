@@ -5,14 +5,8 @@
 sript -q /dev/null tput clear > /dev/null 2>&1
 
 
-# preset terminal output colours
-blush="tput setaf 1"    # blush / red
-green="tput setaf 2"    # green
-reset="tput sgr0"       # reset
-
-
 ################################################################################
-# Show Python site packages dependencies.
+# Log Python site packages.
 #
 # Parameter list:
 #   1. Log Date
@@ -24,8 +18,7 @@ reset="tput sgr0"       # reset
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
-#   7. Tree Flag
-#   8. Package
+#   7. Package
 #       ............
 ################################################################################
 
@@ -37,8 +30,7 @@ arg_b=$3
 arg_c=$4
 arg_y=$5
 arg_V=$6
-arg_t=$7
-arg_pkg=${*:8}
+arg_pkg=${*:7}
 
 
 # log file prepare
@@ -60,131 +52,72 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 
 # log commands
-# usage: $logprefix [command] | logcattee | logsuffix
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
 logsuffix="grep -v '.*'"
-
-
-# pip dependency function usage:
-#   pipdependency python pip-suffix pip-suffix pip-pprint package
-function pipdependency {
-    # parameter assignment
-    local python=$1
-    local prefix=$2
-    local suffix=$3
-    local pprint=$4
-    local arg_pkg=$5
-
-    # log function call
-    echo "+ pipdependency $@" >> $tmpfile
-
-    # if tree flag set
-    if ( $arg_t ) ; then
-        # check if `pipdeptree` installed
-        if $python -m pipdeptree > /dev/null 2>&1 ; then
-            $logprefix echo "++ pipdeptree$pprint -f $arg_pkg" | $logcattee | $logsuffix
-            $logprefix pipdeptree$pprint -f $arg_pkg | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
-        else
-            $blush
-            $logprefix echo "Error: Package 'pipdeptree' not installed on pip$pprint" | $logcattee | $logsuffix
-            $reset
-            $logprefix echo | $logcattee | $logsuffix
-        fi
-    else
-        $logprefix echo "++ pip$pprint show $arg_pkg | grep \"Requires: \" | sed \"s/Requires: //\" | sed \"s/,//g\" | tr \" \" \"\n\"" | $logcattee | $logsuffix
-        $logprefix $prefix/pip$suffix show $arg_pkg | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g" | tr " " "\n" | $logcattee | $logsuffix
-        $logprefix echo | $logcattee | $logsuffix
-    fi
-}
 
 
 # pip logging function usage:
 #   piplogging mode
 function piplogging {
     # parameter assignment
-    mode=$1
+    local mode=$1
 
     # log function call
     echo "+ piplogging $@" >> $tmpfile
 
+
     # make prefix & suffix of pip
     case $mode in
         1)  # pip_sys
-            python="/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7"
             prefix="/Library/Frameworks/Python.framework/Versions/2.7/bin"
             suffix=""
             pprint="_sys" ;;
         2)  # pip_sys3
-            python="/Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6"
             prefix="/Library/Frameworks/Python.framework/Versions/3.6/bin"
             suffix="3"
             pprint="_sys3" ;;
         3)  # pip
-            python="/usr/local/opt/python/bin/python2"
             prefix="/usr/local/opt/python/bin"
             suffix=""
             pprint="" ;;
         4)  # pip3
-            python="/usr/local/opt/python3/bin/python3"
             prefix="/usr/local/opt/python3/bin"
             suffix="3"
             pprint="3" ;;
         5)  # pip_pypy
-            python="/usr/local/opt/pypy/bin/pypy"
             prefix="/usr/local/opt/pypy/bin"
             suffix="_pypy"
             pprint="_pypy" ;;
         6)  # pip_pypy3
-            python="/usr/local/opt/pypy3/bin/pypy3"
             prefix="/usr/local/opt/pypy3/bin"
             suffix="_pypy3"
             pprint="_pypy3" ;;
     esac
 
-    # if tree flag set
-    if ( $arg_t ) ; then
-        # check if executive of pipdeptree exists
-        pipdeptree="/usr/local/bin/pipdeptree$pprint.py"
-        if [ ! -e $pipdeptree ] ; then
-            touch $pipdeptree
-            echo "#!$python" >> $pipdeptree
-            cat pipdeptree.py >> $pipdeptree
-        fi
-    fi
-
     # if executive exits
     if [ -e $prefix/pip$suffix ] ; then
+        # check dependencies for each package
         for name in $arg_pkg ; do
-            # All or Specified Packages
             case $name in
                 all)
-                    # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
-                    list=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/"`
-                    for pkg in $list ; do
-                        pipdependency $python $prefix $suffix $pprint $pkg
-                    done ;;
+                    echo -e "++ pip$pprint list --format legacy | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
+                    $logprefix $prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
+                    echo >> $tmpfile ;;
                 *)
-                    flag=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | awk "/^$name$/"`
+                    # check if package installed
+                    flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
                     if [[ -nz $flag ]]; then
-                        pipdependency $python $prefix $suffix $pprint $name
+                        echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
+                        $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
+                        echo >> $tmpfile
                     else
-                        $blush
-                        $logprefix echo "Error: No pip$pprint package names $name installed." | $logcattee | $logsuffix
-                        $reset
-
-                        # did you mean
-                        dym=`pip list --format legacy | grep $name | xargs | sed "s/ /, /g"`
-                        if [[ -nz $dym ]] ; then
-                            $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-                        fi
-                        $logprefix echo | $logcattee | $logsuffix
+                        echo -e "Error: No pip$pprint package names $name installed.\n" >> $tmpfile
                     fi ;;
             esac
         done
     else
-        echo -e "pip$pprint: Not installed.\n" >> $tmpfile
+        echo -e "$prefix/pip$suffix: No such file or directory.\n" >> $tmpfile
     fi
 }
 

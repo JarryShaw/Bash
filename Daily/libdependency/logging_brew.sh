@@ -5,27 +5,19 @@
 sript -q /dev/null tput clear > /dev/null 2>&1
 
 
-# preset terminal output colours
-blush="tput setaf 1"    # blush / red
-green="tput setaf 2"    # green
-reset="tput sgr0"       # reset
-
-
 ################################################################################
-# Show dependencies of Homebrew packages.
+# Log Homebrew packages.
 #
 # Parameter list:
 #   1. Log Date
-#   2. Tree Flag
-#   3. Package
+#   2. Package
 #       ............
 ################################################################################
 
 
 # parameter assignment
 logdate=$1
-arg_t=$2
-arg_pkg=${*:3}
+arg_pkg=${*:2}
 
 
 # log file prepare
@@ -47,48 +39,27 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 
 
 # log commands
-# usage: $logprefix [command] | logcattee | logsuffix
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
 logsuffix="grep -v '.*'"
 
 
-# if tree flag set
-if ( $arg_t ) ; then
-    tree="--tree"
-else
-    tree=""
-fi
-
-
-# show dependencies
-for name in $arg_pkg ; do
+# log dependency
+for name in $arg_pkg; do
     case $name in
         all)
-            list=`brew list -1`
-            for pkg in $list; do
-                $logprefix echo "+ brew deps $pkg $tree" | $logcattee | $logsuffix
-                $logprefix brew deps $pkg $tree | $logcattee | $logsuffix
-                $logprefix echo | $logcattee | $logsuffix
-            done ;;
+            echo -e "+ brew list -1" >> $tmpfile
+            $logprefix brew list -1 | $logcattee | $logsuffix
+            echo >> $tmpfile ;;
         *)
             # check if package installed
-            if brew list --versions $name > /dev/null ; then
+            if brew list --versions $name > /dev/null 2&>1 ; then
                 # along with dependencies or not
-                $logprefix echo "+ brew deps $name $tree" | $logcattee | $logsuffix
-                $logprefix brew deps $name $tree | $logcattee | $logsuffix
-                $logprefix echo | $logcattee | $logsuffix
+                echo -e "+ brew desc $name | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
+                $logprefix brew desc $name | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
+                echo >> $tmpfile
             else
-                $blush
-                $logprefix echo "Error: No available formula with the name $name." | $logcattee | $logsuffix
-                $reset
-
-                # did you mean
-                dym=`brew list -1 | grep $name | xargs | sed "s/ /, /g"`
-                if [[ -nz $dym ]] ; then
-                    $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
-                fi
-                $logprefix echo | $logcattee | $logsuffix
+                echo -e "Error: No available formula with the name \"$name\"\n" >> $tmpfile
             fi ;;
     esac
 done
