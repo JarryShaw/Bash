@@ -13,6 +13,8 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 #   2. Log Mode
 #   3. Start Package
 #   4. End Package
+#   5. Package
+#       ............
 ################################################################################
 
 
@@ -21,6 +23,7 @@ logdate=$1
 logmode=$2
 arg_s=$3
 arg_e=$4
+arg_pkg=${*:5}
 
 
 # log file prepare
@@ -68,13 +71,28 @@ esac
 
 
 # check for reinstalling packages
-list=`brew cask list -1`
-for name in $list ; do
-    if [[ $name > $start ]] && [[ $name < $end ]] ; then
-        echo -e "+ brew cask info $name | grep  \"$name: \" | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
-        $logprefix brew cask info $name | grep "$name: " | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
-        echo >> $tmpfile
-    fi
+for name in $arg_pkg ; do
+    case $name in
+        all)
+            # check for reinstalling packages
+            list=`brew cask list -1`
+            for pkg in $list ; do
+                if [[ $pkg > $start ]] && [[ $pkg < $end ]] ; then
+                    echo -e "+ brew cask info $pkg | grep  \"$pkg: \" | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
+                    $logprefix brew cask info $pkg | grep "$pkg: " | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
+                    echo >> $tmpfile
+                fi
+            done ;;
+        *)
+            # check if package installed
+            if brew cask list --versions $name > /dev/null 2>&1 ; then
+                echo -e "+ brew cask info $name | grep  \"$name: \" | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
+                $logprefix brew cask info $name | grep "$name: " | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
+                echo >> $tmpfile
+            else
+                echo -e "Error: No available formula with the name \"$name\"\n" >> $tmpfile
+            fi ;;
+    esac
 done
 
 

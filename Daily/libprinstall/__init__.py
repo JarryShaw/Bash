@@ -19,7 +19,7 @@ bold = 'tput bold'      # bold
 under = 'tput smul'     # underline
 
 
-def _merge_packages(args):
+def _merge_packages(args, *, mode):
     if 'package' in args and args.package:
         allflag = False
         packages = set()
@@ -31,7 +31,9 @@ def _merge_packages(args):
                     packages = {'all'}
                     allflag = True; break
                 packages = packages.union(set(list_))
-    elif args.all:
+    elif mode == 'reinstall':
+        packages = {'null'}
+    elif mode == 'postinstall':
         packages = {'all'}
     else:
         packages = set()
@@ -44,7 +46,7 @@ def reinstall_brew(args, *, file, date, cleanup=True, retset=False):
     force = str(args.force).lower()
     start = str(args.start).lower()
     end = str(args.end).lower()
-    packages = _merge_packages(args)
+    packages = _merge_packages(args, mode='reinstall')
 
     if shutil.which('brew') is None:
         os.system(f'''
@@ -61,24 +63,32 @@ def reinstall_brew(args, *, file, date, cleanup=True, retset=False):
     if not args.quiet:
         os.system(f'echo "-*- $({blue})Homebrew$({reset}) -*-"; echo ;')
 
-    if ('all' in packages) or (args.start is not None) or (args.end is not None):
-        logging = subprocess.run(
-            ['bash', 'libprinstall/logging_brew.sh', date, 'reinstall', start, end],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        log = set(logging.stdout.decode().split())
-    else:
-        log = packages
-
-    if log:
-        subprocess.run(
-            ['bash', 'libprinstall/reinstall_brew.sh', date, quiet, verbose, force] + list(log)
-        )
-    else:
+    if 'null' in packages:
+        log = set()
         if not args.quiet:
             os.system(f'echo "$({green})No reinstallation performed.$({reset})"; echo ;')
         with open(file, 'a') as logfile:
             logfile.write('INF: No reinstallation performed.\n')
+    else:
+        logging = subprocess.run(
+            ['bash', 'libprinstall/logging_brew.sh', date, 'reinstall', start, end] + list(packages),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        log = set(logging.stdout.decode().split())
+        if (args.start is not None) or (args.end is not None):
+            pkg = set(logging.stdout.decode().split())
+        else:
+            pkg = packages
+
+        if log:
+            subprocess.run(
+                ['bash', 'libprinstall/reinstall_brew.sh', date, quiet, verbose, force] + list(pkg)
+            )
+        else:
+            if not args.quiet:
+                os.system(f'echo "$({green})No reinstallation performed.$({reset})"; echo ;')
+            with open(file, 'a') as logfile:
+                logfile.write('INF: No reinstallation performed.\n')
 
     if cleanup:
         mode = '-*- Cleanup -*-'.center(80, ' ')
@@ -105,7 +115,7 @@ def reinstall_cask(args, *, file, date, cleanup=True, retset=False):
     verbose = str(args.verbose).lower()
     start = str(args.start).lower()
     end = str(args.end).lower()
-    packages = _merge_packages(args)
+    packages = _merge_packages(args, mode='reinstall')
 
     testing = subprocess.run(
         shlex.split('brew cask'),
@@ -128,7 +138,7 @@ def reinstall_cask(args, *, file, date, cleanup=True, retset=False):
 
     if ('all' in packages) or (args.start is not None) or (args.end is not None):
         logging = subprocess.run(
-            ['bash', 'libprinstall/logging_cask.sh', date, 'reinstall', start, end],
+            ['bash', 'libprinstall/logging_cask.sh', date, 'reinstall', start, end] + list(packages),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         log = set(logging.stdout.decode().split())
@@ -198,7 +208,7 @@ def postinstall(args, *, file, date, cleanup=True):
     verbose = str(args.verbose).lower()
     start = str(args.start).lower()
     end = str(args.end).lower()
-    packages = _merge_packages(args)
+    packages = _merge_packages(args, mode='postinstall')
 
     if shutil.which('brew') is None:
         os.system(f'''
@@ -217,7 +227,7 @@ def postinstall(args, *, file, date, cleanup=True):
 
     if ('all' in packages) or (args.start is not None) or (args.end is not None):
         logging = subprocess.run(
-            ['bash', 'libprinstall/logging_brew.sh', date, 'postinstall', start, end],
+            ['bash', 'libprinstall/logging_brew.sh', date, 'postinstall', start, end] + list(packages),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         log = set(logging.stdout.replace(b'\x1b', b'').decode().split())
