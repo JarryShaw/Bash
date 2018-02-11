@@ -95,7 +95,7 @@ function pipupdate {
             prefix="/usr/local/opt/python/bin"
             suffix=""
             pprint="" ;;
-        4)  # pip
+        4)  # pip3
             prefix="/usr/local/opt/python3/bin"
             suffix="3"
             pprint="3" ;;
@@ -103,7 +103,7 @@ function pipupdate {
             prefix="/usr/local/opt/pypy/bin"
             suffix="_pypy"
             pprint="_pypy" ;;
-        6)  # pip_pypy
+        6)  # pip_pypy3
             prefix="/usr/local/opt/pypy3/bin"
             suffix="_pypy3"
             pprint="_pypy3" ;;

@@ -35,6 +35,8 @@ def _merge_packages(args):
                     packages = {'null'}
                     nullflag = True; break
                 packages = packages.union(set(list_))
+    elif args.all:
+        packages = {'all'}
     else:
         packages = {'null'}
     return packages

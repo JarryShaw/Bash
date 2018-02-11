@@ -57,11 +57,12 @@ for name in $arg_pkg; do
             # check if package installed
             if brew list --versions $name > /dev/null 2&>1 ; then
                 # along with dependencies or not
-                if ( $arg_i ) ; then
-                    echo -e "+ brew desc $name | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
-                    $logprefix brew desc $name | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
-                    echo >> $tmpfile
-                else
+                echo -e "+ brew desc $name | sed \"s/\(.*\)*: .*/\1/\"" >> $tmpfile
+                $logprefix brew desc $name | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
+                echo >> $tmpfile
+
+                # if ignore-dependencies flag not set
+                if ( ! $arg_i ) ; then
                     echo -e "+ brew deps $name" >> $tmpfile
                     $logprefix brew deps $name | $logcattee | $logsuffix
                     echo >> $tmpfile

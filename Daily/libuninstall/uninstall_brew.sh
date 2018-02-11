@@ -124,11 +124,12 @@ for name in $arg_pkg ; do
             # check if package installed
             if brew list --versions $name > /dev/null ; then
                 # along with dependencies or not
-                if ( $arg_i ) ; then
-                    $logprefix echo "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
-                    $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
-                    $logprefix echo | $logcattee | $logsuffix
-                else
+                $logprefix echo "+ brew uninstall $name --ignore-dependencies $force $verbose $quiet" | $logcattee | $logsuffix
+                $logprefix brew uninstall $name --ignore-dependencies $force $verbose $quiet | $logcattee | $logsuffix
+                $logprefix echo | $logcattee | $logsuffix
+
+                # if ignore-dependencies flag not set
+                if ( ! $arg_i ) ; then
                     list=`brew deps $name`
                     for pkg in $list; do
                         # check if package installed

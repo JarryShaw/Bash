@@ -89,11 +89,12 @@ function pipuninstall {
     echo "+ pipuninstall $@" >> $tmpfile
 
     # uninstall procedure
-    if ( $arg_i ) ; then
-        $logprefix echo "++ pip$pprint uninstall $arg_pkg --yes $verbose $quiet" | $logcattee | $logsuffix
-        $logprefix $prefix/pip$suffix uninstall $arg_pkg --yes $verbose $quiet | $logcattee | $logsuffix
-        $logprefix echo | $logcattee | $logsuffix
-    else
+    $logprefix echo "++ pip$pprint uninstall $arg_pkg --yes $verbose $quiet" | $logcattee | $logsuffix
+    $logprefix $prefix/pip$suffix uninstall $arg_pkg --yes $verbose $quiet | $logcattee | $logsuffix
+    $logprefix echo | $logcattee | $logsuffix
+
+    # if ignore-dependencies flag not set
+    if ( ! $arg_i ) ; then
         list=`$prefix/pip$suffix show $arg_pkg | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g"`
         for name in $arg_pkg ; do
             # check if package installed
@@ -159,7 +160,7 @@ function piplogging {
             prefix="/usr/local/opt/python/bin"
             suffix=""
             pprint="" ;;
-        4)  # pip
+        4)  # pip3
             prefix="/usr/local/opt/python3/bin"
             suffix="3"
             pprint="3" ;;
@@ -167,7 +168,7 @@ function piplogging {
             prefix="/usr/local/opt/pypy/bin"
             suffix="_pypy"
             pprint="_pypy" ;;
-        6)  # pip_pypy
+        6)  # pip_pypy3
             prefix="/usr/local/opt/pypy3/bin"
             suffix="_pypy3"
             pprint="_pypy3" ;;

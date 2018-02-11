@@ -83,7 +83,7 @@ function piplogging {
             prefix="/usr/local/opt/python/bin"
             suffix=""
             pprint="" ;;
-        4)  # pip
+        4)  # pip3
             prefix="/usr/local/opt/python3/bin"
             suffix="3"
             pprint="3" ;;
@@ -91,7 +91,7 @@ function piplogging {
             prefix="/usr/local/opt/pypy/bin"
             suffix="_pypy"
             pprint="_pypy" ;;
-        6)  # pip_pypy
+        6)  # pip_pypy3
             prefix="/usr/local/opt/pypy3/bin"
             suffix="_pypy3"
             pprint="_pypy3" ;;
@@ -110,17 +110,19 @@ function piplogging {
                     # check if package installed
                     flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
                     if [[ -nz $flag ]]; then
-                        if ( $arg_i ) ; then
-                            echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
-                            $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
-                            echo >> $tmpfile
-                        else
+                        echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
+                        $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
+                        echo >> $tmpfile
+
+                        # if ignore-dependencies flag not set
+                        if ( ! $arg_i ) ; then
                             echo -e "++ pip$pprint show $name | grep \"Requires: \" | sed \"s/Requires: //\" | sed \"s/,//g\"" >> $tmpfile
                             $logprefix $prefix/pip$suffix show $name | grep "Requires: " | sed "s/Requires: //" | sed "s/,//g" | $logcattee | $logsuffix
-                            echo >> $tmpfile ;;
+                            echo >> $tmpfile
                         fi
                     else
                         echo -e "Error: No pip$pprint package names $name installed.\n" >> $tmpfile
+                    fi ;;
             esac
         done
     else

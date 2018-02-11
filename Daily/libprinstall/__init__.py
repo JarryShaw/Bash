@@ -32,11 +32,12 @@ def _merge_packages(args, *, mode):
                     allflag = True; break
                 packages = packages.union(set(list_))
     elif mode == 'reinstall':
-        packages = {'null'}
-    elif mode == 'postinstall':
+        if args.all:
+            packages = {'all'}
+        else:
+            packages = {'null'}
+    else:   # 'postinstall'
         packages = {'all'}
-    else:
-        packages = set()
     return packages
 
 

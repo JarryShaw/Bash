@@ -64,6 +64,10 @@ def get_parser():
     parser_brew = subparser.add_parser('brew', description=(
                             'Reinstall Homebrew packages.'
                         ))
+    parser_brew.add_argument('-a', '--all', action='store_true', default=False,
+                        dest='all', help=(
+                            'Reinstall all packages installed through Homebrew.'
+                        ))
     parser_brew.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
                             'Name of packages to be reinstalled, default is null.'
@@ -93,6 +97,10 @@ def get_parser():
 
     parser_cask = subparser.add_parser('cask', description=(
                             'Reinstall Caskroom packages.'
+                        ))
+    parser_cask.add_argument('-a', '--all', action='store_true', default=False,
+                        dest='all', help=(
+                            'Reinstall all packages installed through Caskroom.'
                         ))
     parser_cask.add_argument('-p', '--package', metavar='PKG', action='append',
                         dest='package', help=(
