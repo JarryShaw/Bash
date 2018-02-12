@@ -48,8 +48,8 @@ logsuffix="grep -v '.*'"
 for name in $arg_pkg; do
     case $name in
         all)
-            echo -e "+ brew list -1" >> $tmpfile
-            $logprefix brew list -1 | $logcattee | $logsuffix
+            echo -e "+ brew leaves" >> $tmpfile
+            $logprefix brew leaves | $logcattee | $logsuffix
             echo >> $tmpfile ;;
         *)
             # check if package installed

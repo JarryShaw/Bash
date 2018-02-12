@@ -50,7 +50,7 @@ def get_parser():
     ))
     parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(__version__))
-    parser.add_argument('-a', '--all', action='store_true', default=False,
+    parser.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
                             'Show dependencies of all packages installed '
                             'through pip and Homebrew.'
@@ -64,7 +64,7 @@ def get_parser():
     parser_pip = subparser.add_parser('pip', description=(
                             'Show dependencies of Python packages.'
                         ))
-    parser_pip.add_argument('-a', '--all', action='store_true', default=False,
+    parser_pip.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
                             'Show dependencies of all packages installed through pip.'
                         ))
@@ -103,7 +103,7 @@ def get_parser():
     parser_brew = subparser.add_parser('brew', description=(
                             'Show dependencies of Homebrew packages.'
                         ))
-    parser_brew.add_argument('-a', '--all', action='store_true', default=False,
+    parser_brew.add_argument('-a', '--all', action='store_true', default=True,
                         dest='all', help=(
                             'Show dependencies of all packages installed through Homebrew.'
                         ))

@@ -18,6 +18,8 @@ sript -q /dev/null tput clear > /dev/null 2>&1
 #       |-> 1 : Both
 #       |-> 2 : Python 2.*
 #       |-> 3 : Python 3.*
+#   7. Package
+#       ............
 ################################################################################
 
 
@@ -28,6 +30,7 @@ arg_b=$3
 arg_c=$4
 arg_y=$5
 arg_V=$6
+arg_pkg=${*:7}
 
 
 # log file prepare
@@ -95,9 +98,24 @@ function piplogging {
     # if executive exits
     if [ -e $prefix/pip$suffix ] ; then
         # check for outdated packages
-        echo -e "++ pip$pprint list --format legacy --not-required --outdate | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
-        $logprefix $prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
-        echo >> $tmpfile
+        for name in $arg_pkg ; do
+            case $name in
+                all)
+                    echo -e "++ pip$pprint list --format legacy --not-required --outdate | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
+                    $logprefix $prefix/pip$suffix list --format legacy --not-required --outdate | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
+                    echo >> $tmpfile ;;
+                *)
+                    # check if package installed
+                    flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
+                    if [[ -nz $flag ]]; then
+                        echo -e "++ pip$pprint show $name | grep \"Name: \" | sed \"s/Name: //\"" >> $tmpfile
+                        $logprefix $prefix/pip$suffix show $name | grep "Name: " | sed "s/Name: //" | $logcattee | $logsuffix
+                        echo >> $tmpfile
+                    else
+                        echo -e "Error: No pip$pprint package names $name installed.\n" >> $tmpfile
+                    fi ;;
+            esac
+        done
     else
         echo -e "$prefix/pip$suffix: No such file or directory.\n" >> $tmpfile
     fi

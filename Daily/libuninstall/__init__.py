@@ -24,7 +24,7 @@ def _merge_packages(args):
         allflag = False
         nullflag = False
         packages = set()
-        for pkg in args.packages:
+        for pkg in args.package:
             if allflag or nullflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
@@ -63,7 +63,8 @@ def uninstall_pip(args, *, file, date, retset=False):
         with open(file, 'a') as logfile:
             logfile.write('INF: No uninstallation performed.\n')
     else:
-        if 'all' in packages and args.mode is None:
+        flag = True if args.mode is None else (args.version == 1 or not any((args.system, args.brew, args.cpython, args.pypy)))
+        if ('all' in packages and flag) or args.package is not None:
             system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
         else:
             system, brew, cpython, pypy, version = \

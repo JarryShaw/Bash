@@ -141,7 +141,7 @@ function pipupdate {
                         $reset
 
                         # did you mean
-                        dym=`pip list --format legacy | grep $name | xargs | sed "s/ /, /g"`
+                        dym=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | grep $name | xargs | sed "s/ /, /g"`
                         if [[ -nz $dym ]] ; then
                             $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
                         fi

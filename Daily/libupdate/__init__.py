@@ -22,7 +22,7 @@ def _merge_packages(args):
     if 'package' in args and args.package:
         allflag = False
         packages = set()
-        for pkg in args.packages:
+        for pkg in args.package:
             if allflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
@@ -87,21 +87,19 @@ def update_pip(args, *, file, date, retset=False):
     if not args.quiet:
         os.system(f'echo "-*- $({blue})Python$({reset}) -*-"; echo ;')
 
-    if 'all' in packages and args.mode is None:
+    flag = True if args.mode is None else (args.version == 1 or not any((args.system, args.brew, args.cpython, args.pypy)))
+    if ('all' in packages and flag) or args.package is not None:
         system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
     else:
         system, brew, cpython, pypy, version = \
             str(args.system).lower(), str(args.brew).lower(), \
             str(args.cpython).lower(), str(args.pypy).lower(), str(args.version or 1)
 
-    if 'all' in packages:
-        logging = subprocess.run(
-            ['bash', 'libupdate/logging_pip.sh', date, system, brew, cpython, pypy, version],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        log = set(logging.stdout.decode().split())
-    else:
-        log = packages
+    logging = subprocess.run(
+        ['bash', 'libupdate/logging_pip.sh', date, system, brew, cpython, pypy, version] + list(packages),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    log = set(logging.stdout.decode().split())
 
     subprocess.run(
         ['bash', 'libupdate/update_pip.sh', date, system, brew, cpython, pypy, version, quiet, verbose] + list(packages)

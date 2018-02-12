@@ -67,14 +67,14 @@ logsuffix="grep -v '.*'"
 
 
 # pip dependency function usage:
-#   pipdependency python pip-suffix pip-suffix pip-pprint package
+#   pipdependency package python pip-suffix pip-suffix pip-pprint
 function pipdependency {
     # parameter assignment
-    local python=$1
-    local prefix=$2
-    local suffix=$3
-    local pprint=$4
-    local arg_pkg=$5
+    local arg_pkg=$1
+    local python=$2
+    local prefix=$3
+    local suffix=$4
+    local pprint=$5
 
     # log function call
     echo "+ pipdependency $@" >> $tmpfile
@@ -83,12 +83,19 @@ function pipdependency {
     if ( $arg_t ) ; then
         # check if `pipdeptree` installed
         if $python -m pipdeptree > /dev/null 2>&1 ; then
-            $logprefix echo "++ pipdeptree$pprint -f $arg_pkg" | $logcattee | $logsuffix
-            $logprefix pipdeptree$pprint -f $arg_pkg | $logcattee | $logsuffix
-            $logprefix echo | $logcattee | $logsuffix
+            case $arg_pkg in
+                all)
+                    $logprefix echo "++ pipdeptree$pprint" | $logcattee | $logsuffix
+                    $logprefix pipdeptree$pprint | $logcattee | $logsuffix
+                    $logprefix echo | $logcattee | $logsuffix ;;
+                *)
+                    $logprefix echo "++ pipdeptree$pprint -p $arg_pkg" | $logcattee | $logsuffix
+                    $logprefix pipdeptree$pprint -p $arg_pkg | $logcattee | $logsuffix
+                    $logprefix echo | $logcattee | $logsuffix ;;
+            esac
         else
             $blush
-            $logprefix echo "Error: Package 'pipdeptree' not installed on pip$pprint" | $logcattee | $logsuffix
+            $logprefix echo "Error: Package pipdeptree not installed on pip$pprint." | $logcattee | $logsuffix
             $reset
             $logprefix echo | $logcattee | $logsuffix
         fi
@@ -146,11 +153,11 @@ function piplogging {
     # if tree flag set
     if ( $arg_t ) ; then
         # check if executive of pipdeptree exists
-        pipdeptree="/usr/local/bin/pipdeptree$pprint.py"
+        pipdeptree="/usr/local/bin/pipdeptree$pprint"
         if [ ! -e $pipdeptree ] ; then
             touch $pipdeptree
             echo "#!$python" >> $pipdeptree
-            cat pipdeptree.py >> $pipdeptree
+            cat libdependency/pipdeptree.py >> $pipdeptree
         fi
     fi
 
@@ -160,22 +167,28 @@ function piplogging {
             # All or Specified Packages
             case $name in
                 all)
-                    # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
-                    list=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/"`
+                    # if tree flag set
+                    if ( $arg_t ) ; then
+                        list="all"
+                    else
+                        # list=`pipdeptree$pprint | grep -e "==" | grep -v "required"`
+                        list=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/"`
+                    fi
+
                     for pkg in $list ; do
-                        pipdependency $python $prefix $suffix $pprint $pkg
+                        pipdependency $pkg $python $prefix $suffix $pprint
                     done ;;
                 *)
                     flag=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | awk "/^$name$/"`
                     if [[ -nz $flag ]]; then
-                        pipdependency $python $prefix $suffix $pprint $name
+                        pipdependency $name $python $prefix $suffix $pprint
                     else
                         $blush
                         $logprefix echo "Error: No pip$pprint package names $name installed." | $logcattee | $logsuffix
                         $reset
 
                         # did you mean
-                        dym=`pip list --format legacy | grep $name | xargs | sed "s/ /, /g"`
+                        dym=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | grep $name | xargs | sed "s/ /, /g"`
                         if [[ -nz $dym ]] ; then
                             $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
                         fi

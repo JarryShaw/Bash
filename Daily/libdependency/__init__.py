@@ -24,7 +24,7 @@ def _merge_packages(args):
         allflag = False
         nullflag = False
         packages = set()
-        for pkg in args.packages:
+        for pkg in args.package:
             if allflag or nullflag: break
             mapping = map(shlex.split, pkg.split(','))
             for list_ in mapping:
@@ -58,7 +58,8 @@ def dependency_pip(args, *, file, date, retset=False):
         with open(file, 'a') as logfile:
             logfile.write('INF: No dependency showed.\n')
     else:
-        if 'all' in packages and args.mode is None:
+        flag = True if args.mode is None else (args.version == 1 or not any((args.system, args.brew, args.cpython, args.pypy)))
+        if ('all' in packages and flag) or args.package is not None:
             system, brew, cpython, pypy, version = 'true', 'true', 'true', 'true', '1'
         else:
             system, brew, cpython, pypy, version = \
@@ -75,8 +76,9 @@ def dependency_pip(args, *, file, date, retset=False):
             ['bash', 'libdependency/dependency_pip.sh', date, system, brew, cpython, pypy, version, tree] + list(packages)
         )
 
-    time.sleep(1)
-    os.system('tput clear')
+    if retset:
+        time.sleep(1)
+        os.system('tput clear')
     return log if retset else dict(pip=log)
 
 
@@ -113,8 +115,6 @@ def dependency_brew(args, *, file, date, retset=False):
             ['bash', 'libdependency/dependency_brew.sh', date, tree] + list(packages)
         )
 
-    time.sleep(1)
-    os.system('tput clear')
     return log if retset else dict(brew=log)
 
 

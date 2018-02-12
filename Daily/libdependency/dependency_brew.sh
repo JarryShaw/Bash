@@ -65,8 +65,8 @@ fi
 for name in $arg_pkg ; do
     case $name in
         all)
-            list=`brew list -1`
-            for pkg in $list; do
+            list=`brew leaves`
+            for pkg in $list ; do
                 $logprefix echo "+ brew deps $pkg $tree" | $logcattee | $logsuffix
                 $logprefix brew deps $pkg $tree | $logcattee | $logsuffix
                 $logprefix echo | $logcattee | $logsuffix

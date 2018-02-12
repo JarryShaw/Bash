@@ -101,8 +101,8 @@ function piplogging {
         for name in $arg_pkg ; do
             case $name in
                 all)
-                    echo -e "++ pip$pprint list --format legacy | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
-                    $logprefix $prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
+                    echo -e "++ pip$pprint list --format legacy --not-required | sed \"s/\(.*\)* (.*).*/\1/\"" >> $tmpfile
+                    $logprefix $prefix/pip$suffix list --format legacy --not-required | sed "s/\(.*\)* (.*).*/\1/" | $logcattee | $logsuffix
                     echo >> $tmpfile ;;
                 *)
                     # check if package installed

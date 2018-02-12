@@ -81,7 +81,7 @@ def get_parser():
                             'installed through official installer.'
                         ))
     parser_pip.add_argument('-b', '--brew', action='store_true', default=False,
-                        dest='cpython', help=(
+                        dest='brew', help=(
                             'Uninstall pip packages on Cellar level, i.e. python '
                             'installed through Homebrew.'
                         ))

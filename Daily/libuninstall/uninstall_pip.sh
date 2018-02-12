@@ -77,13 +77,13 @@ fi
 
 
 # pip uninstall function usage
-#   pipuninstall pip-suffix pip-suffix pip-pprint package
+#   pipuninstall package pip-suffix pip-suffix pip-pprint
 function pipuninstall {
     # parameter assignment
-    local prefix=$1
-    local suffix=$2
-    local pprint=$3
-    local arg_pkg=$4
+    local arg_pkg=$1
+    local prefix=$2
+    local suffix=$3
+    local pprint=$4
 
     # log function call
     echo "+ pipuninstall $@" >> $tmpfile
@@ -222,14 +222,14 @@ function piplogging {
                     flag=`$prefix/pip$suffix list --format legacy | awk "/^$name$/"`
                     if [[ -nz $flag ]]; then
                         if ( $arg_Y ) ; then
-                            pipuninstall $prefix $suffix $pprint $name
+                            pipuninstall $name $prefix $suffix $pprint
                         else
                             while true ; do
                                 # ask for confirmation
                                 read -p "Would you like to uninstall $name? (y/N)" yn
                                 case $yn in
                                     [Yy]*)
-                                        pipuninstall $prefix $suffix $pprint $name
+                                        pipuninstall $name $prefix $suffix $pprint
                                         break ;;
                                     [Nn]*)
                                         $blush
@@ -247,7 +247,7 @@ function piplogging {
                         $reset
 
                         # did you mean
-                        dym=`pip list --format legacy | grep $name | xargs | sed "s/ /, /g"`
+                        dym=`$prefix/pip$suffix list --format legacy | sed "s/\(.*\)* (.*).*/\1/" | grep $name | xargs | sed "s/ /, /g"`
                         if [[ -nz $dym ]] ; then
                             $logprefix echo "Did you mean any of the following packages: $dym?" | $logcattee | $logsuffix
                         fi
@@ -257,9 +257,11 @@ function piplogging {
         done
 
         # fix missing package dependencies
-        miss=`$prefix/pip$suffix check | sed "s/.* requires \(.*\)*, .*/\1/" | sort -u | xargs`
+        miss=`$prefix/pip$suffix check | grep "requires" | sed "s/.* requires \(.*\)*, .*/\1/" | sort -u | xargs`
         if [[ -nz $miss ]] ; then
-            $logprefix echo "Required pip$pprint packages found missing: ${blush}${miss}${reset}" | $logcattee | $logsuffix
+            $blush
+            $logprefix echo "Required pip$pprint packages found missing: $miss" | $logcattee | $logsuffix
+            $reset
             if ( $arg_Y ) ; then
                 pip_fixmissing $prefix $suffix $pprint $miss
             else
@@ -279,6 +281,7 @@ function piplogging {
                     esac
                 done
             fi
+            $logprefix echo | $logcattee | $logsuffix
         fi
     else
         echo -e "$prefix/pip$suffix: No such file or directory.\n" >> $tmpfile
