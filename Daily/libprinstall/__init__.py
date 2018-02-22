@@ -97,7 +97,7 @@ def reinstall_brew(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
-            time.sleep(1)
+            time.sleep(5)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -106,7 +106,7 @@ def reinstall_brew(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(brew=log)
 
@@ -162,7 +162,7 @@ def reinstall_cask(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
-            time.sleep(1)
+            time.sleep(5)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -171,7 +171,7 @@ def reinstall_cask(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(cask=log)
 
@@ -190,7 +190,7 @@ def reinstall_all(args, *, file, date):
         logfile.write(f'\n\n{mode}\n\n')
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
         os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -199,7 +199,7 @@ def reinstall_all(args, *, file, date):
     )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log
 
@@ -251,7 +251,7 @@ def postinstall(args, *, file, date, cleanup=True):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
-            time.sleep(1)
+            time.sleep(5)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -260,6 +260,6 @@ def postinstall(args, *, file, date, cleanup=True):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log

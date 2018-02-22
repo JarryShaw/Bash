@@ -70,7 +70,7 @@ def update_apm(args, *, file, date, retset=False):
     )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(apm=log)
 
@@ -157,7 +157,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
-            time.sleep(1)
+            time.sleep(5)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -166,7 +166,7 @@ def update_brew(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(brew=log)
 
@@ -218,7 +218,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
             logfile.write(f'\n\n{mode}\n\n')
 
         if not args.quiet:
-            time.sleep(1)
+            time.sleep(5)
             os.system('tput clear')
             os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -227,7 +227,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(cask=log)
 
@@ -263,7 +263,7 @@ def update_appstore(args, *, file, date, retset=False):
     )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(appstore=log)
 
@@ -285,7 +285,7 @@ def update_all(args, *, file, date):
         logfile.write(f'\n\n{mode}\n\n')
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
         os.system(f'echo "-*- $({blue})Cleanup$({reset}) -*-"; echo ;')
 
@@ -294,6 +294,6 @@ def update_all(args, *, file, date):
     )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log

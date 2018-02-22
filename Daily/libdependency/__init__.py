@@ -77,7 +77,7 @@ def dependency_pip(args, *, file, date, retset=False):
         )
 
     if retset:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(pip=log)
 

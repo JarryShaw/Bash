@@ -82,7 +82,7 @@ def uninstall_pip(args, *, file, date, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(pip=log)
 
@@ -128,7 +128,7 @@ def uninstall_brew(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(brew=log)
 
@@ -176,7 +176,7 @@ def uninstall_cask(args, *, file, date, cleanup=True, retset=False):
         )
 
     if not args.quiet:
-        time.sleep(1)
+        time.sleep(5)
         os.system('tput clear')
     return log if retset else dict(cask=log)
 
