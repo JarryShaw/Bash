@@ -45,16 +45,17 @@ logsuffix="grep -v '.*'"
 
 # if greedy flag set
 if ( $arg_g ) ; then
-    greedy="--greedy"
+    echo -e "+ brew cask outdated --quiet --greedy" >> $tmpfile
+    $logprefix brew cask outdated --quiet --greedy | $logcattee | $logsuffix
+    echo >> $tmpfile
 else
-    greedy=""
+    # check for oudated packages " >> $tmpfile
+    version=$(brew cask info $cask | sed -n "s/$cask:\ \(.*\)/\1/p")
+    installed=$(find "/usr/local/Caskroom/$cask" -type d -maxdepth 1 -maxdepth 1 -name "$version")
+    if [[ -z $installed ]] ; then
+        $logprefix echo "$cask" | $logcattee | $logsuffix
+    fi
 fi
-
-
-# check for oudated packages " >> $tmpfile
-echo -e "+ brew cask outdated --quiet $greedy" >> $tmpfile
-$logprefix brew cask outdated --quiet $greedy | $logcattee | $logsuffix
-echo >> $tmpfile
 
 
 # read /tmp/log/update.log line by line then migrate to log file

@@ -203,7 +203,7 @@ def update_cask(args, *, file, date, cleanup=True, retset=False):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         log = set(logging.stdout.decode().split())
-        outdated = 'true' if logging.stdout.decode() else 'false'
+        outdated = 'true' if log else 'false'
     else:
         log = packages
         outdated = 'true'
