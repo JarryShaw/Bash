@@ -129,8 +129,8 @@ function piplogging {
             suffix="3"
             pprint="_sys3" ;;
         3)  # pip
-            python="/usr/local/opt/python/bin/python2"
-            prefix="/usr/local/opt/python/bin"
+            python="/usr/local/opt/python2/bin/python2"
+            prefix="/usr/local/opt/python2/bin"
             suffix=""
             pprint="" ;;
         4)  # pip3
@@ -139,8 +139,8 @@ function piplogging {
             suffix="3"
             pprint="3" ;;
         5)  # pip_pypy
-            python="/usr/local/opt/pypy/bin/pypy"
-            prefix="/usr/local/opt/pypy/bin"
+            python="/usr/local/opt/pypy2/bin/pypy"
+            prefix="/usr/local/opt/pypy2/bin"
             suffix="_pypy"
             pprint="_pypy" ;;
         6)  # pip_pypy3
