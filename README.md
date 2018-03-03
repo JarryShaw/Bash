@@ -55,7 +55,7 @@ Just some useful bash scripts.
 &emsp; `update` is a package manager written in Python 3.6 and Bash 3.2, which automatically update all packages installed through ——
 
   - `apm` -- Atom packages
-  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](pypy.org) compiler, and installed through `brew` or official disk images
+  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](https://pypy.org) compiler, and installed through `brew` or official disk images
   - `brew` -- [Homebrew](https://brew.sh) packages
   - `cask` -- [Caskroom](https://caskroom.github.io) applications
   - `appstore` -- Mac App Store or `softwareupdate` installed applications
@@ -238,7 +238,7 @@ optional arguments:
 
 &emsp; `uninstall` is a package manager written in Python 3.6 and Bash 3.2, which recursively and interactively uninstall packages installed through ——
 
-  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](pypy.org) compiler, and installed through `brew` or official disk images
+  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](https://pypy.org) compiler, and installed through `brew` or official disk images
   - `brew` -- [Homebrew](https://brew.sh) packages
   - `cask` -- [Caskroom](https://caskroom.github.io) applications
 
@@ -525,7 +525,7 @@ $ postinstall --all
 
 &nbsp; `dependency` is a package manager written in Python 3.6 and Bash 3.2, which automatically and interactively show dependencies of packages installed through ——
 
-  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](pypy.org) compiler, and installed through `brew` or official disk images
+  - `pip` -- Python packages, in both version of 2.7 and 3.6, running under [CPython](https://www.python.org) or [PyPy](https://pypy.org) compiler, and installed through `brew` or official disk images
   - `brew` -- [Homebrew](https://brew.sh) packages
 
 &emsp; You may install `dependency` through `pip` of Python (versions 3.\*). And log files can be found in directory `/Library/Logs/Scripts/dependency/`. The global man page for `dependency` shows as below.
