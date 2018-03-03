@@ -50,7 +50,7 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 # usage: $logprefix [command] | logcattee | logsuffix
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
-logsuffix="grep -v '.*'"
+logsuffix="grep ^.*$"
 
 
 # if tree flag set

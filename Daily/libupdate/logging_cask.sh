@@ -40,7 +40,7 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 # log commands
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
-logsuffix="grep -v '.*'"
+logsuffix="grep ^.*$"
 
 
 # if greedy flag set
@@ -53,7 +53,7 @@ else
     version=$(brew cask info $cask | sed -n "s/$cask:\ \(.*\)/\1/p")
     installed=$(find "/usr/local/Caskroom/$cask" -type d -maxdepth 1 -maxdepth 1 -name "$version")
     if [[ -z $installed ]] ; then
-        $logprefix echo "$cask" | $logcattee | $logsuffix
+        $logprefix brew cask info $cask | grep "$cask: " | sed "s/\(.*\)*: .*/\1/" | $logcattee | $logsuffix
     fi
 fi
 

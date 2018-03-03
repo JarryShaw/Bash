@@ -54,7 +54,7 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 # log commands
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
-logsuffix="grep -v '.*'"
+logsuffix="grep ^.*$"
 
 
 # pip logging function usage:

@@ -54,9 +54,9 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
 if ( $arg_q ) ; then
-    logsuffix="grep '.*'"
+    logsuffix="grep ^$"
 else
-    logsuffix="grep -v '.*'"
+    logsuffix="grep ^.*$"
 fi
 
 

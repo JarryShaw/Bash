@@ -38,7 +38,7 @@ echo "- /bin/bash $0 $@" >> $tmpfile
 # log commands
 logprefix="script -q /dev/null"
 logcattee="tee -a $tmpfile"
-logsuffix="grep -v '.*'"
+logsuffix="grep ^.*$"
 
 
 # check for oudated packages
