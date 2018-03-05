@@ -2,6 +2,26 @@
 
 Just some useful bash scripts.
 
+- [Daily](https://github.com/JarryShaw/jsdaily)
+    * [`update`](https://github.com/JarryShaw/jsdaily#update)
+        - [Atom](https://github.com/JarryShaw/jsdaily#update_apm)
+        - [Python](https://github.com/JarryShaw/jsdaily#update_pip)
+        - [Homebrew](https://github.com/JarryShaw/jsdaily#update_brew)
+        - [Caskroom](https://github.com/JarryShaw/jsdaily#update_cask)
+        - [App Store](https://github.com/JarryShaw/jsdaily#update_apptore)
+    * [`uninstall`](https://github.com/JarryShaw/jsdaily#uninstall)
+        - [Python](https://github.com/JarryShaw/jsdaily#uninstall_pip)
+        - [Homebrew](https://github.com/JarryShaw/jsdaily#uninstall_brew)
+        - [Caskroom](https://github.com/JarryShaw/jsdaily#uninstall_cask)
+    * [`reinstall`](https://github.com/JarryShaw/jsdaily#reinstall)
+        - [Homebrew](https://github.com/JarryShaw/jsdaily#reinstall_brew)
+        - [Caskroom](https://github.com/JarryShaw/jsdaily#reinstall_cask)
+    * [`postinstall`](https://github.com/JarryShaw/jsdaily#postinstall)
+        - [Homebrew](https://github.com/JarryShaw/jsdaily#postinstall_brew)
+    * [`dependency`](https://github.com/JarryShaw/jsdaily#dependency)
+        - [Python](https://github.com/JarryShaw/jsdaily#dependency_pip)
+        - [Homebrew](https://github.com/JarryShaw/jsdaily#dependency_brew)
+
 - [Kali Scripts](#kali)
     * [`acccheck`](#acccheck)
     * [`firewalk`](#firewalk)
