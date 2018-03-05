@@ -5,7 +5,7 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 
 if [ -e setup.py ] ; then
-	echo "-*- ${green}Register in PyPi-Test${reset} -*-"
+    echo "-*- ${green}Register in PyPi-Test${reset} -*-"
     python setup.py register -r pypitest
     tput clear
     sleep 10
