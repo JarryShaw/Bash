@@ -161,6 +161,15 @@ nmap -sS -sU -T4 -A -v -PE -PS80,443 -PA3389 -PP -PU40125 -PY --source-port 53 -
 
 &emsp; This script helps to register your Python packages in [PyPI](http://pypi.python.org), which makes it downloadable through `pip`.
 
+&emsp; To setup this script on your Mac, use commands below:
+
+```
+cp pypi.sh /usr/local/bin/pypi
+chmod 777 /usr/local/bin/pypi
+```
+
+&emsp; And to use this script, change your working directory to where you would like to run pypi, which should contains a `setup.py` file, then simple type `pypi` and enter, all will be done.
+
 <a name="startup"> </a>
 
 ##### `startup` - Startup script for Raspberry Pi

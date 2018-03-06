@@ -7,16 +7,16 @@ reset=`tput sgr0`
 if [ -e setup.py ] ; then
     echo "-*- ${green}Register in PyPi-Test${reset} -*-"
     python setup.py register -r pypitest
+    sleep 3
     tput clear
-    sleep 10
     echo "-*- ${green}Upload to PyPi-Test${reset} -*-"
     python setup.py sdist upload -r pypitest
+    sleep 3
     tput clear
-    sleep 10
     echo "-*- ${green}Register in PyPi${reset} -*-"
     python setup.py register -r pypi
+    sleep 3
     tput clear
-    sleep 10
     echo "-*- ${green}Upload to PyPi${reset} -*-"
     python setup.py sdist upload -r pypi
 else
