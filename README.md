@@ -34,9 +34,11 @@ Just some useful bash scripts.
         - [Slow Scan](#slow)
 
 - [Others](#others)
+    * [`startup`](#startup)
     * [`colour`](#colour)
     * [`pypi`](#pypi)
-    * [`startup`](#startup)
+    * [`pypitest`](#pypitest)
+    * [`piptest`](#piptest)
 
 
 ---------------------------------------------------------------------------------------------------
@@ -149,6 +151,12 @@ nmap -sS -sU -T4 -A -v -PE -PS80,443 -PA3389 -PP -PU40125 -PY --source-port 53 -
 
 ## Others
 
+<a name="startup"> </a>
+
+##### `startup` - Startup script for Raspberry Pi
+
+&emsp; When screen sharing with [Raspberry Pi](https://raspberrypi.org/) over [`tightvncserver`](http://tightvnc.com), some startup commands are needed to proceed.
+
 <a name="colour"> </a>
 
 ##### `colour` - A lovely colourful script
@@ -157,9 +165,9 @@ nmap -sS -sU -T4 -A -v -PE -PS80,443 -PA3389 -PP -PU40125 -PY --source-port 53 -
 
 <a name="pypi"> </a>
 
-##### `pypi` - Register your package in PyPI
+##### `pypi` - Upload your package to PyPI & TestPyPI
 
-&emsp; This script helps to register your Python packages in [PyPI](http://pypi.python.org), which makes it downloadable through `pip`.
+&emsp; This script helps to upload your Python packages to [PyPI](http://pypi.org) and [TestPyPI](http://test.pypi.org), which makes it downloadable through `pip`.
 
 &emsp; To setup this script on your Mac, use commands below:
 
@@ -168,10 +176,35 @@ cp pypi.sh /usr/local/bin/pypi
 chmod 777 /usr/local/bin/pypi
 ```
 
-&emsp; And to use this script, change your working directory to where you would like to run pypi, which should contains a `setup.py` file, then simple type `pypi` and enter, all will be done.
+&emsp; And to use this script, change your working directory to where you would like to run `pypi`, which should contains a `setup.py` file, then simply type `pypi` and enter, all will be done.
 
-<a name="startup"> </a>
+```
+cd your-working-directory
+pypi
+```
 
-##### `startup` - Startup script for Raspberry Pi
+<a name="pypitest"> </a>
 
-&emsp; When screen sharing with [Raspberry Pi](https://raspberrypi.org/) over [`tightvncserver`](http://tightvnc.com), some startup commands are needed to proceed.
+##### `pypitest` - Register your package in PyPI & TestPyPI
+
+&emsp; This script helps to upload your Python packages to [TestPyPI](http://test.pypi.org) only.
+
+&emsp; To setup this script on your Mac, use commands below:
+
+```
+cp pypi.sh /usr/local/bin/pypitest
+chmod 777 /usr/local/bin/pypitest
+```
+
+&emsp; And to use this script, change your working directory to where you would like to run `pypitest`, which should contains a `setup.py` file, then simply type `pypitest` and enter, all will be done.
+
+```
+cd your-working-directory
+pypitest
+```
+
+<a name="piptest"> </a>
+
+##### `piptest` - Download packages from TestPyPI
+
+__DEPRECATED__
