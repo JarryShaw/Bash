@@ -207,4 +207,44 @@ pypitest
 
 ##### `piptest` - Download packages from TestPyPI
 
-__DEPRECATED__
+__NOTE: MAC ONLY__
+
+&emsp; This script helps to download packages from [TestPyPI](http://test.pypi.org).
+
+&emsp; To setup this script on your Mac, use commands below:
+
+```
+cp pypi.sh /usr/local/bin/piptest
+chmod 777 /usr/local/bin/piptest
+```
+
+&emsp; And to use this script, determine which pip version to use first, then use commands below:
+
+```
+piptest [[pip|pypy]version] package
+```
+
+&emsp; Registered versions shown as below:
+
+|   Code    |                         Description                          |
+| :-------: | :----------------------------------------------------------: |
+|    20     | /Library/Frameworks/Python.framework/Versions/2.0/bin/pip2.0 |
+|    21     | /Library/Frameworks/Python.framework/Versions/2.1/bin/pip2.1 |
+|    22     | /Library/Frameworks/Python.framework/Versions/2.2/bin/pip2.2 |
+|    23     | /Library/Frameworks/Python.framework/Versions/2.3/bin/pip2.3 |
+|    24     | /Library/Frameworks/Python.framework/Versions/2.4/bin/pip2.4 |
+|    25     | /Library/Frameworks/Python.framework/Versions/2.5/bin/pip2.5 |
+|    26     | /Library/Frameworks/Python.framework/Versions/2.6/bin/pip2.6 |
+|    27     | /Library/Frameworks/Python.framework/Versions/2.7/bin/pip2.7 |
+|    30     | /Library/Frameworks/Python.framework/Versions/3.0/bin/pip3.0 |
+|    31     | /Library/Frameworks/Python.framework/Versions/3.1/bin/pip3.1 |
+|    32     | /Library/Frameworks/Python.framework/Versions/3.2/bin/pip3.2 |
+|    33     | /Library/Frameworks/Python.framework/Versions/3.3/bin/pip3.3 |
+|    34     | /Library/Frameworks/Python.framework/Versions/3.4/bin/pip3.4 |
+|    35     | /Library/Frameworks/Python.framework/Versions/3.5/bin/pip3.5 |
+|    36     | /Library/Frameworks/Python.framework/Versions/3.6/bin/pip3.6 |
+|    37     | /Library/Frameworks/Python.framework/Versions/3.7/bin/pip3.7 |
+| 2 \| pip2 |               /usr/local/opt/python@2/bin/pip2               |
+| 3 \| pip3 |               /usr/local/opt/python@3/bin/pip3               |
+|   pypy2   |               /usr/local/opt/pypy/bin/pip_pypy               |
+|   pypy3   |              /usr/local/opt/pypy3/bin/pip_pypy3              |

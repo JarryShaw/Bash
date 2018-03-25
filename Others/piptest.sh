@@ -98,7 +98,11 @@ case $ver in
 esac
 
 if [ -e $prefix/pip$suffix ] ; then
-    ( set -x; $prefix/pip$suffix install --no-cache-dir --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple $pkg )
+	list=`$prefix/pip$suffix install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -I $pkg==newest 2>&1 | grep "from versions: " | sed "s/.*(from versions: \(.*\)*)/\1/"`
+	IFS=', ' read -ra array <<< "$list"
+	length=$[${#array[@]} - 1]
+	newest=${array[$length]}
+    ( set -x; sudo $prefix/pip$suffix install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -I $pkg==$newest --upgrade --no-cache-dir )
 else
     echo "${blush}Error: pip$pprint not installed${reset}"
 fi
