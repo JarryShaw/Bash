@@ -36,6 +36,7 @@ Just some useful bash scripts.
 - [Others](#others)
     * [`startup`](#startup)
     * [`colour`](#colour)
+    * [`ansi`](#ansi)
     * [`pypi`](#pypi)
     * [`pypitest`](#pypitest)
     * [`piptest`](#piptest)
@@ -162,6 +163,12 @@ nmap -sS -sU -T4 -A -v -PE -PS80,443 -PA3389 -PP -PU40125 -PY --source-port 53 -
 ##### `colour` - A lovely colourful script
 
 &emsp; This script uses `tput setaf` to display contents with colours in terminal. Note that, it only works ideal on macOS.
+
+<a name="ansi"> </a>
+
+##### `ansi` - A simple ANSI sample script
+
+&emsp; This script uses ANSI escape code to display magic contents in terminal. Note that, it only works ideal on macOS.
 
 <a name="pypi"> </a>
 
