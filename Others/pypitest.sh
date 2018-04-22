@@ -9,8 +9,11 @@ if [ -e setup.py ] ; then
     # python setup.py register -r pypitest
     # sleep 3
     # tput clear
-    echo "-*- ${green}Upload to PyPi-Test${reset} -*-"
-    ( set -x; python setup.py sdist upload -r pypitest )
+    echo "-*- ${green}Upload to TestPyPi${reset} -*-"
+    echo
+    ( set -x; python setup.py sdist bdist_wheel )
+    echo
+    ( set -x; twine upload dist/* -r pypitest --skip-existing )
     # sleep 3
     # tput clear
     # echo "-*- ${green}Register in PyPi${reset} -*-"
