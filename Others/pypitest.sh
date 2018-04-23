@@ -1,27 +1,13 @@
 #!/bin/bash
 
-blush=`tput setaf 1`
-green=`tput setaf 2`
-reset=`tput sgr0`
+blush="\033[91m"
+green="\033[96m"
+reset="\033[0m"
 
 if [ -e setup.py ] ; then
-    # echo "-*- ${green}Register in PyPi-Test${reset} -*-"
-    # python setup.py register -r pypitest
-    # sleep 3
-    # tput clear
-    echo "-*- ${green}Upload to TestPyPi${reset} -*-"
-    echo
-    ( set -x; python setup.py sdist bdist_wheel )
-    echo
-    ( set -x; twine upload dist/* -r pypitest --skip-existing )
-    # sleep 3
-    # tput clear
-    # echo "-*- ${green}Register in PyPi${reset} -*-"
-    # python setup.py register -r pypi
-    # sleep 3
-    # tput clear
-    # echo "-*- ${green}Upload to PyPi${reset} -*-"
-    # python setup.py sdist upload -r pypi
+    echo -e "-*- ${green}Upload to PyPi-Test${reset} -*-\n"
+    ( set -x; python setup.py sdist bdist_wheel upload -r pypitest )
+    # ( set -x; twine upload dist/* -r pypitest --skip-existing )
 else
-    echo "${blush}Error: do not find setup.py in $PWD${reset}"
+    echo -e "${blush}Error${reset}: do not find setup.py in $PWD"
 fi
