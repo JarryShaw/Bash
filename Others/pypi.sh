@@ -6,10 +6,12 @@ reset="\033[0m"
 
 if [ -e setup.py ] ; then
     echo -e "-*- ${green}Upload to PyPi-Test${reset} -*-\n"
+    rm -rf build
     ( set -x; python setup.py sdist bdist_wheel upload -r pypitest )
     # ( set -x; twine upload dist/* -r pypitest --skip-existing )
     tput clear
     echo -e "-*- ${green}Upload to PyPi-Test${reset} -*-\n"
+    rm -rf build
     ( set -x; python setup.py sdist bdist_wheel upload -r pypi )
     # ( set -x; twine upload dist/* -r pypi --skip-existing )
 else
