@@ -106,7 +106,7 @@ if [ -e $prefix/$suffix ] ; then
     IFS=', ' read -ra array <<< "$list"
     length=$[${#array[@]} - 1]
     newest=${array[$length]}
-    ( set -x; sudo $prefix/$suffix -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -I $pkg==$newest )
+    ( set -x; sudo -H $prefix/$suffix -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -I $pkg==$newest )
 else
     echo -e "${blush}Error${reset}: pip$pprint not installed"
 fi
