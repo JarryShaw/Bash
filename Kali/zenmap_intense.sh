@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo -e "\n-*- Zenmap intense scan all ports -*-\n"
 

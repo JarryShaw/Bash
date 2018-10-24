@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo -e "\n-*- Zenmap quick scan -*-\n"
 

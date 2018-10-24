@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 blush="\033[91m"
 green="\033[96m"

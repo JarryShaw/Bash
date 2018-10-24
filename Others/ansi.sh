@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 num=-20
 while [ $num -le 120 ]; do

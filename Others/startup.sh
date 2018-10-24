@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo -e "\n-*- Start VNC Server -*-\n"
 tightvncserver
