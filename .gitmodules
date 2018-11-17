@@ -1,0 +1,3 @@
+[submodule "Daily"]
+	path = Daily
+	url = https://github.com/JarryShaw/MacDaily
